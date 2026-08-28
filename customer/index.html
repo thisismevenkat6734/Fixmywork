@@ -1,1 +1,754 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b2a4a"><meta name="description" content="FIX MY WORK — We Find. They Fix. Find trusted local service professionals near you."><title>FIX MY WORK — We Find. They Fix.</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="./styles.css"></head><body><div id="app"><header class="site-header"><a class="brand" href="./index.html" aria-label="FIX MY WORK home"><span class="brand-mark" aria-hidden="true">✓</span><span><strong>FIX MY WORK</strong><small>We Find. They Fix.</small></span></a><nav class="desktop-nav" aria-label="Main navigation"><a href="#home">Home</a><a href="#services">Services</a><a href="#works">My Works</a><a href="#support">Support</a></nav><div class="header-actions"><button id="locationButton" class="location-button" type="button" aria-label="Set your location">📍 <span id="locationText">Set Location</span></button><button id="menuButton" class="icon-button" type="button" aria-label="Open menu" aria-expanded="false">☰</button><button id="authButton" class="primary-button" type="button">Login</button></div></header><main><section id="safetyNotice" class="safety-notice" role="alert"><strong>⚠️ SAFETY NOTICE</strong><span>Do not pay any advance or share OTPs, passwords or sensitive financial information with a worker unless clearly authorised through FIX MY WORK.</span><button id="closeSafety" type="button" aria-label="Close safety notice">×</button></section><section id="home" class="hero-section"><div class="hero-content"><span class="eyebrow">TRUSTED LOCAL SERVICES</span><h1>Your problem.<br><span>We find the right professional.</span></h1><p>Tell us what you need and find available service professionals near you.</p><div class="hero-actions"><button id="requestServiceButton" class="primary-button large" type="button">Request a Service <span>→</span></button><button id="useLocationButton" class="secondary-button large" type="button">📍 Use My Location</button></div></div><div class="hero-map-preview"><div id="map" class="map-container" aria-label="Nearby service professionals map"><div class="map-overlay"><span class="live-dot"></span><span id="mapStatus">Map ready — set your location</span></div><div class="map-center-pin">📍</div><div class="map-card"><strong>Nearby professionals</strong><span id="nearbyCount">Searching after location</span></div></div></div></section><section id="services" class="section"><div class="section-heading"><div><span class="eyebrow">WHAT DO YOU NEED?</span><h2>Choose a service</h2></div><button id="viewAllServices" class="text-button" type="button">View all →</button></div><div id="serviceGrid" class="service-grid"><button class="service-card" data-service="Electrical" type="button"><span class="service-icon">⚡</span><strong>Electrical</strong><small>Electricians & repairs</small></button><button class="service-card" data-service="Plumbing" type="button"><span class="service-icon">🔧</span><strong>Plumbing</strong><small>Plumbers & water issues</small></button><button class="service-card" data-service="AC Repair" type="button"><span class="service-icon">❄️</span><strong>AC Repair</strong><small>AC service & repair</small></button><button class="service-card" data-service="RO Repair" type="button"><span class="service-icon">💧</span><strong>RO Repair</strong><small>RO & water purifier</small></button><button class="service-card" data-service="Appliance Repair" type="button"><span class="service-icon">🏠</span><strong>Appliance</strong><small>Home appliances</small></button><button class="service-card" data-service="Painting" type="button"><span class="service-icon">🎨</span><strong>Painting</strong><small>Painting services</small></button><button class="service-card" data-service="Carpentry" type="button"><span class="service-icon">🪚</span><strong>Carpentry</strong><small>Furniture & woodwork</small></button><button class="service-card" data-service="Other" type="button"><span class="service-icon">🛠️</span><strong>Other Services</strong><small>Find more professionals</small></button></div></section><section id="works" class="section works-section"><div class="section-heading"><div><span class="eyebrow">YOUR ACTIVITY</span><h2>My Works</h2></div><button id="viewAllWorks" class="text-button" type="button">View history →</button></div><div id="worksContainer" class="works-container"><div class="empty-state"><div class="empty-icon">📋</div><h3>No active works</h3><p>Your service requests and completed works will appear here.</p><button id="emptyRequestButton" class="primary-button" type="button">Request a Service</button></div></div></section><section class="trust-section"><div class="trust-item"><span>✓</span><div><strong>Verified Professionals</strong><small>Profiles are reviewed before approval.</small></div></div><div class="trust-item"><span>📍</span><div><strong>Nearby Matching</strong><small>Find professionals around your location.</small></div></div><div class="trust-item"><span>⭐</span><div><strong>Ratings & Reviews</strong><small>See feedback from real completed jobs.</small></div></div><div class="trust-item"><span>🛡️</span><div><strong>Safety First</strong><small>Report problems directly through the platform.</small></div></div></section><section id="support" class="support-section"><div><span class="eyebrow">NEED HELP?</span><h2>We're here to help.</h2><p>For service issues, payment concerns, safety reports or account support, contact FIX MY WORK.</p></div><button id="supportButton" class="secondary-button" type="button">Contact Support</button></section></main><footer class="site-footer"><div class="footer-brand"><strong>FIX MY WORK</strong><span>We Find. They Fix.</span></div><div class="footer-links"><a href="#terms">Terms & Conditions</a><a href="#privacy">Privacy Policy</a><a href="#safety">Safety</a><a href="#support">Help & Support</a></div><p>© <span id="currentYear"></span> FIX MY WORK. All rights reserved.</p></footer></div><div id="authModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="authTitle"><div class="modal-card"><button class="modal-close" type="button" data-close-modal="authModal" aria-label="Close">×</button><span class="eyebrow">WELCOME</span><h2 id="authTitle">Login to FIX MY WORK</h2><p>Sign in to request services, track works and manage your profile.</p><form id="authForm"><label for="authEmail">Email address</label><input id="authEmail" name="email" type="email" autocomplete="email" required placeholder="you@example.com"><button class="primary-button full" type="submit">Continue</button></form><p class="modal-note">Authentication will be connected to Firebase.</p></div></div><div id="serviceModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="serviceTitle"><div class="modal-card large-modal"><button class="modal-close" type="button" data-close-modal="serviceModal" aria-label="Close">×</button><span class="eyebrow">SERVICE REQUEST</span><h2 id="serviceTitle">Request a Service</h2><p id="selectedServiceText">Tell us what you need.</p><form id="serviceForm"><label for="serviceSelect">Service</label><select id="serviceSelect" name="service" required><option value="">Select service</option><option>Electrical</option><option>Plumbing</option><option>AC Repair</option><option>RO Repair</option><option>Appliance Repair</option><option>Painting</option><option>Carpentry</option><option>Other Services</option></select><label for="problemDescription">What needs to be fixed?</label><textarea id="problemDescription" name="description" rows="4" maxlength="1000" required placeholder="Describe the problem..."></textarea><label for="serviceAddress">Service location</label><input id="serviceAddress" name="address" type="text" maxlength="300" required placeholder="Enter your service address"><label for="servicePhoto">Add photos <span>(optional)</span></label><input id="servicePhoto" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><div id="photoPreview" class="photo-preview"></div><div class="form-safety">⚠️ Never share OTPs, passwords or banking credentials with a service professional.</div><button class="primary-button full" type="submit">Find a Professional</button></form></div></div><div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div><script type="module" src="./app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b2a4a">
+    <meta name="description" content="FIX MY WORK — We Find. They Fix. Find trusted local service professionals near you.">
+
+    <title>FIX MY WORK — We Find. They Fix.</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+
+    <div id="app">
+
+        <!-- ==================== HEADER ==================== -->
+        <header class="site-header">
+
+            <a class="brand" href="./index.html" aria-label="FIX MY WORK home">
+                <span class="brand-mark" aria-hidden="true">✓</span>
+
+                <span>
+                    <strong>FIX MY WORK</strong>
+                    <small>We Find. They Fix.</small>
+                </span>
+            </a>
+
+            <nav class="desktop-nav" aria-label="Main navigation">
+                <a href="#home">Home</a>
+                <a href="#services">Services</a>
+                <a href="#works">My Works</a>
+                <a href="#support">Support</a>
+            </nav>
+
+            <div class="header-actions">
+
+                <button
+                    id="locationButton"
+                    class="location-button"
+                    type="button"
+                    aria-label="Set your location"
+                >
+                    📍 <span id="locationText">Set Location</span>
+                </button>
+
+                <button
+                    id="menuButton"
+                    class="icon-button"
+                    type="button"
+                    aria-label="Open menu"
+                    aria-expanded="false"
+                >
+                    ☰
+                </button>
+
+                <button
+                    id="authButton"
+                    class="primary-button"
+                    type="button"
+                >
+                    Login
+                </button>
+
+            </div>
+        </header>
+
+
+        <!-- ==================== SAFETY NOTICE ==================== -->
+        <section
+            id="safetyNotice"
+            class="safety-notice"
+            role="alert"
+        >
+            <strong>⚠️ SAFETY NOTICE</strong>
+
+            <span>
+                Do not pay any advance or share OTPs, passwords or sensitive
+                financial information with a worker unless clearly authorised
+                through FIX MY WORK.
+            </span>
+
+            <button
+                id="closeSafety"
+                type="button"
+                aria-label="Close safety notice"
+            >
+                ×
+            </button>
+        </section>
+
+
+        <main>
+
+            <!-- ==================== HERO SECTION ==================== -->
+            <section id="home" class="hero-section">
+
+                <div class="hero-content">
+
+                    <span class="eyebrow">
+                        TRUSTED LOCAL SERVICES
+                    </span>
+
+                    <h1>
+                        Your problem.<br>
+                        <span>We find the right professional.</span>
+                    </h1>
+
+                    <p>
+                        Tell us what you need and find available service
+                        professionals near you.
+                    </p>
+
+                    <div class="hero-actions">
+
+                        <button
+                            id="requestServiceButton"
+                            class="primary-button large"
+                            type="button"
+                        >
+                            Request a Service
+                            <span>→</span>
+                        </button>
+
+                        <button
+                            id="useLocationButton"
+                            class="secondary-button large"
+                            type="button"
+                        >
+                            📍 Use My Location
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==================== MAP ==================== -->
+                <div class="hero-map-preview">
+
+                    <div
+                        id="map"
+                        class="map-container"
+                        aria-label="Nearby service professionals map"
+                    >
+
+                        <div class="map-overlay">
+                            <span class="live-dot"></span>
+
+                            <span id="mapStatus">
+                                Map ready — set your location
+                            </span>
+                        </div>
+
+                        <div class="map-center-pin">
+                            📍
+                        </div>
+
+                        <div class="map-card">
+
+                            <strong>
+                                Nearby professionals
+                            </strong>
+
+                            <span id="nearbyCount">
+                                Searching after location
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==================== SERVICES ==================== -->
+            <section id="services" class="section">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            WHAT DO YOU NEED?
+                        </span>
+
+                        <h2>
+                            Choose a service
+                        </h2>
+
+                    </div>
+
+                    <button
+                        id="viewAllServices"
+                        class="text-button"
+                        type="button"
+                    >
+                        View all →
+                    </button>
+
+                </div>
+
+
+                <div id="serviceGrid" class="service-grid">
+
+                    <button
+                        class="service-card"
+                        data-service="Electrical"
+                        type="button"
+                    >
+                        <span class="service-icon">⚡</span>
+                        <strong>Electrical</strong>
+                        <small>Electricians & repairs</small>
+                    </button>
+
+
+                    <button
+                        class="service-card"
+                        data-service="Plumbing"
+                        type="button"
+                    >
+                        <span class="service-icon">🔧</span>
+                        <strong>Plumbing</strong>
+                        <small>Plumbers & water issues</small>
+                    </button>
+
+
+                    <button
+                        class="service-card"
+                        data-service="AC Repair"
+                        type="button"
+                    >
+                        <span class="service-icon">❄️</span>
+                        <strong>AC Repair</strong>
+                        <small>AC service & repair</small>
+                    </button>
+
+
+                    <button
+                        class="service-card"
+                        data-service="RO Repair"
+                        type="button"
+                    >
+                        <span class="service-icon">💧</span>
+                        <strong>RO Repair</strong>
+                        <small>RO & water purifier</small>
+                    </button>
+
+
+                    <button
+                        class="service-card"
+                        data-service="Appliance Repair"
+                        type="button"
+                    >
+                        <span class="service-icon">🏠</span>
+                        <strong>Appliance</strong>
+                        <small>Home appliances</small>
+                    </button>
+
+
+                    <button
+                        class="service-card"
+                        data-service="Painting"
+                        type="button"
+                    >
+                        <span class="service-icon">🎨</span>
+                        <strong>Painting</strong>
+                        <small>Painting services</small>
+                    </button>
+
+
+                    <button
+                        class="service-card"
+                        data-service="Carpentry"
+                        type="button"
+                    >
+                        <span class="service-icon">🪚</span>
+                        <strong>Carpentry</strong>
+                        <small>Furniture & woodwork</small>
+                    </button>
+
+
+                    <button
+                        class="service-card"
+                        data-service="Other"
+                        type="button"
+                    >
+                        <span class="service-icon">🛠️</span>
+                        <strong>Other Services</strong>
+                        <small>Find more professionals</small>
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==================== MY WORKS ==================== -->
+            <section id="works" class="section works-section">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            YOUR ACTIVITY
+                        </span>
+
+                        <h2>
+                            My Works
+                        </h2>
+
+                    </div>
+
+                    <button
+                        id="viewAllWorks"
+                        class="text-button"
+                        type="button"
+                    >
+                        View history →
+                    </button>
+
+                </div>
+
+
+                <div id="worksContainer" class="works-container">
+
+                    <div class="empty-state">
+
+                        <div class="empty-icon">
+                            📋
+                        </div>
+
+                        <h3>
+                            No active works
+                        </h3>
+
+                        <p>
+                            Your service requests and completed works
+                            will appear here.
+                        </p>
+
+                        <button
+                            id="emptyRequestButton"
+                            class="primary-button"
+                            type="button"
+                        >
+                            Request a Service
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==================== TRUST FEATURES ==================== -->
+            <section class="trust-section">
+
+                <div class="trust-item">
+
+                    <span>✓</span>
+
+                    <div>
+                        <strong>
+                            Verified Professionals
+                        </strong>
+
+                        <small>
+                            Profiles are reviewed before approval.
+                        </small>
+                    </div>
+
+                </div>
+
+
+                <div class="trust-item">
+
+                    <span>📍</span>
+
+                    <div>
+                        <strong>
+                            Nearby Matching
+                        </strong>
+
+                        <small>
+                            Find professionals around your location.
+                        </small>
+                    </div>
+
+                </div>
+
+
+                <div class="trust-item">
+
+                    <span>⭐</span>
+
+                    <div>
+                        <strong>
+                            Ratings & Reviews
+                        </strong>
+
+                        <small>
+                            See feedback from real completed jobs.
+                        </small>
+                    </div>
+
+                </div>
+
+
+                <div class="trust-item">
+
+                    <span>🛡️</span>
+
+                    <div>
+                        <strong>
+                            Safety First
+                        </strong>
+
+                        <small>
+                            Report problems directly through the platform.
+                        </small>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==================== SUPPORT ==================== -->
+            <section id="support" class="support-section">
+
+                <div>
+
+                    <span class="eyebrow">
+                        NEED HELP?
+                    </span>
+
+                    <h2>
+                        We're here to help.
+                    </h2>
+
+                    <p>
+                        For service issues, payment concerns, safety reports
+                        or account support, contact FIX MY WORK.
+                    </p>
+
+                </div>
+
+                <button
+                    id="supportButton"
+                    class="secondary-button"
+                    type="button"
+                >
+                    Contact Support
+                </button>
+
+            </section>
+
+        </main>
+
+
+        <!-- ==================== FOOTER ==================== -->
+        <footer class="site-footer">
+
+            <div class="footer-brand">
+
+                <strong>
+                    FIX MY WORK
+                </strong>
+
+                <span>
+                    We Find. They Fix.
+                </span>
+
+            </div>
+
+
+            <div class="footer-links">
+
+                <a href="#terms">
+                    Terms & Conditions
+                </a>
+
+                <a href="#privacy">
+                    Privacy Policy
+                </a>
+
+                <a href="#safety">
+                    Safety
+                </a>
+
+                <a href="#support">
+                    Help & Support
+                </a>
+
+            </div>
+
+
+            <p>
+                © <span id="currentYear"></span>
+                FIX MY WORK. All rights reserved.
+            </p>
+
+        </footer>
+
+    </div>
+
+
+    <!-- ==================== LOGIN MODAL ==================== -->
+    <div
+        id="authModal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="authTitle"
+    >
+
+        <div class="modal-card">
+
+            <button
+                class="modal-close"
+                type="button"
+                data-close-modal="authModal"
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+            <span class="eyebrow">
+                WELCOME
+            </span>
+
+            <h2 id="authTitle">
+                Login to FIX MY WORK
+            </h2>
+
+            <p>
+                Sign in to request services, track works and manage your profile.
+            </p>
+
+
+            <form id="authForm">
+
+                <label for="authEmail">
+                    Email address
+                </label>
+
+                <input
+                    id="authEmail"
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    required
+                    placeholder="you@example.com"
+                >
+
+                <button
+                    class="primary-button full"
+                    type="submit"
+                >
+                    Continue
+                </button>
+
+            </form>
+
+
+            <p class="modal-note">
+                Authentication will be connected to Firebase.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==================== SERVICE REQUEST MODAL ==================== -->
+    <div
+        id="serviceModal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="serviceTitle"
+    >
+
+        <div class="modal-card large-modal">
+
+            <button
+                class="modal-close"
+                type="button"
+                data-close-modal="serviceModal"
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+            <span class="eyebrow">
+                SERVICE REQUEST
+            </span>
+
+            <h2 id="serviceTitle">
+                Request a Service
+            </h2>
+
+            <p id="selectedServiceText">
+                Tell us what you need.
+            </p>
+
+
+            <form id="serviceForm">
+
+                <label for="serviceSelect">
+                    Service
+                </label>
+
+                <select
+                    id="serviceSelect"
+                    name="service"
+                    required
+                >
+                    <option value="">
+                        Select service
+                    </option>
+
+                    <option>
+                        Electrical
+                    </option>
+
+                    <option>
+                        Plumbing
+                    </option>
+
+                    <option>
+                        AC Repair
+                    </option>
+
+                    <option>
+                        RO Repair
+                    </option>
+
+                    <option>
+                        Appliance Repair
+                    </option>
+
+                    <option>
+                        Painting
+                    </option>
+
+                    <option>
+                        Carpentry
+                    </option>
+
+                    <option>
+                        Other Services
+                    </option>
+                </select>
+
+
+                <label for="problemDescription">
+                    What needs to be fixed?
+                </label>
+
+                <textarea
+                    id="problemDescription"
+                    name="description"
+                    rows="4"
+                    maxlength="1000"
+                    required
+                    placeholder="Describe the problem..."
+                ></textarea>
+
+
+                <label for="serviceAddress">
+                    Service location
+                </label>
+
+                <input
+                    id="serviceAddress"
+                    name="address"
+                    type="text"
+                    maxlength="300"
+                    required
+                    placeholder="Enter your service address"
+                >
+
+
+                <label for="servicePhoto">
+                    Add photos
+                    <span>(optional)</span>
+                </label>
+
+                <input
+                    id="servicePhoto"
+                    name="photos"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                >
+
+
+                <div
+                    id="photoPreview"
+                    class="photo-preview"
+                ></div>
+
+
+                <div class="form-safety">
+                    ⚠️ Never share OTPs, passwords or banking credentials
+                    with a service professional.
+                </div>
+
+
+                <button
+                    class="primary-button full"
+                    type="submit"
+                >
+                    Find a Professional
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==================== TOAST ==================== -->
+    <div
+        id="toastContainer"
+        class="toast-container"
+        aria-live="polite"
+        aria-atomic="true"
+    ></div>
+
+
+    <!-- ==================== APPLICATION SCRIPT ==================== -->
+    <script
+        type="module"
+        src="./app.js"
+    ></script>
+
+</body>
+              </html>
