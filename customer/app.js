@@ -1,37 +1,35 @@
-// ============================================================
-// FIX MY WORK — CUSTOMER APP
-// customer/app.js
-// ============================================================
+    /* =========================================================
+   FIX MY WORK — CUSTOMER APP
+   Complete Customer Frontend + Firebase Backend Logic
+========================================================= */
 
 import { initializeApp } from
-    "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
     getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
     onAuthStateChanged,
-    updateProfile
+    signInAnonymously,
+    signOut
 } from
-    "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
     getFirestore,
     collection,
     addDoc,
     doc,
-    setDoc,
     getDoc,
+    setDoc,
     updateDoc,
     query,
     where,
-    orderBy,
     onSnapshot,
     serverTimestamp,
-    arrayUnion
+    orderBy,
+    limit
 } from
-    "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
     getStorage,
@@ -39,42 +37,26 @@ import {
     uploadBytes,
     getDownloadURL
 } from
-    "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 
-// ============================================================
-// FIREBASE CONFIG
-// ============================================================
-//
-// IMPORTANT:
-// Replace ONLY these values with your Firebase project values.
-// ============================================================
+/* =========================================================
+   FIREBASE CONFIG
+========================================================= */
 
 const firebaseConfig = {
-
-    apiKey: "YOUR_API_KEY",
-
-    authDomain:
-        "YOUR_PROJECT.firebaseapp.com",
-
-    projectId:
-        "YOUR_PROJECT_ID",
-
-    storageBucket:
-        "YOUR_PROJECT.firebasestorage.app",
-
-    messagingSenderId:
-        "YOUR_MESSAGING_SENDER_ID",
-
-    appId:
-        "YOUR_APP_ID"
-
+    apiKey: "AIzaSyCP8DGLQMXPUsv_p2zQ-NLkziwPQe1XkgU",
+    authDomain: "fixmywork-d83ba.firebaseapp.com",
+    projectId: "fixmywork-d83ba",
+    storageBucket: "fixmywork-d83ba.firebasestorage.app",
+    messagingSenderId: "207313302232",
+    appId: "1:207313302232:web:73055348982ad84abeddad"
 };
 
 
-// ============================================================
-// INITIALIZE FIREBASE
-// ============================================================
+/* =========================================================
+   FIREBASE INITIALIZATION
+========================================================= */
 
 const app = initializeApp(firebaseConfig);
 
@@ -85,104 +67,173 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 
-// ============================================================
-// GLOBAL STATE
-// ============================================================
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
 
 let currentUser = null;
 
-let currentCustomer = null;
+let currentOrderId = null;
+
+let currentOrderUnsubscribe = null;
+
+let currentHistoryUnsubscribe = null;
 
 let selectedService = "";
 
-let selectedRating = 0;
+let selectedLocation = null;
 
-let currentRequestId = null;
+let selectedPhotos = [];
 
-let currentWorker = null;
-
-let deferredInstallPrompt = null;
-
-let unsubscribeCustomerRequests = null;
+let isSubmittingOrder = false;
 
 
-// ============================================================
-// DOM HELPERS
-// ============================================================
+/* =========================================================
+   100 SERVICE CATEGORIES
+========================================================= */
+
+const SERVICES = [
+    "Electrical",
+    "Plumbing",
+    "AC Repair",
+    "RO & Water Purifier",
+    "Refrigerator Repair",
+    "Washing Machine Repair",
+    "TV Repair",
+    "Microwave Repair",
+    "Geyser Repair",
+    "Chimney Repair",
+    "Water Heater Repair",
+    "Cooler Repair",
+    "Dishwasher Repair",
+    "Inverter Repair",
+    "UPS Repair",
+    "Generator Service",
+    "Fan Repair",
+    "Motor Repair",
+    "Pump Repair",
+    "Water Motor Repair",
+    "Borewell Service",
+    "Carpentry",
+    "Furniture Repair",
+    "Furniture Assembly",
+    "Door Repair",
+    "Window Repair",
+    "Locksmith",
+    "Glass Work",
+    "Aluminium Work",
+    "UPVC Work",
+    "Painting",
+    "Wall Painting",
+    "Interior Painting",
+    "Exterior Painting",
+    "Waterproofing",
+    "Tile Work",
+    "Marble Work",
+    "Granite Work",
+    "Flooring",
+    "False Ceiling",
+    "POP Work",
+    "Modular Kitchen",
+    "Bathroom Renovation",
+    "Kitchen Renovation",
+    "Home Renovation",
+    "Masonry",
+    "Civil Work",
+    "Roof Repair",
+    "Terrace Repair",
+    "Leakage Repair",
+    "Pest Control",
+    "Termite Control",
+    "Cleaning",
+    "Deep Cleaning",
+    "Bathroom Cleaning",
+    "Kitchen Cleaning",
+    "Sofa Cleaning",
+    "Carpet Cleaning",
+    "Water Tank Cleaning",
+    "House Cleaning",
+    "Office Cleaning",
+    "AC Cleaning",
+    "AC Installation",
+    "AC Gas Filling",
+    "AC Uninstallation",
+    "DTH Installation",
+    "DTH Repair",
+    "Internet Installation",
+    "WiFi Setup",
+    "CCTV Installation",
+    "CCTV Repair",
+    "Computer Repair",
+    "Laptop Repair",
+    "Printer Repair",
+    "Mobile Repair",
+    "Mobile Screen Repair",
+    "Mobile Software Service",
+    "Computer Software Service",
+    "Data Recovery",
+    "Home Appliance Service",
+    "Electric Stove Repair",
+    "Induction Stove Repair",
+    "Gas Stove Repair",
+    "Gas Pipeline Service",
+    "Solar Panel Service",
+    "Solar Water Heater",
+    "Battery Service",
+    "Bike Repair",
+    "Car Repair",
+    "Car Washing",
+    "Bike Washing",
+    "Tyre Service",
+    "Wheel Alignment",
+    "Towing Service",
+    "Packers & Movers",
+    "Courier Service",
+    "Gardening",
+    "Home Shifting Help",
+    "Driver Service",
+    "Security Guard Service",
+    "Event Decoration",
+    "Other Home Service"
+];
+
+
+/* =========================================================
+   DOM HELPERS
+========================================================= */
 
 const $ = (id) => document.getElementById(id);
 
-const $$ = (selector) =>
-    document.querySelectorAll(selector);
-
-
-// ============================================================
-// YEAR
-// ============================================================
-
-if ($("currentYear")) {
-
-    $("currentYear").textContent =
-        new Date().getFullYear();
-
-}
-
-
-// ============================================================
-// TOAST
-// ============================================================
-
 function showToast(message, type = "info") {
 
-    const container =
-        $("toastContainer");
+    const container = $("toastContainer");
 
-    if (!container) return;
+    if (!container) {
+        alert(message);
+        return;
+    }
 
-    const toast =
-        document.createElement("div");
+    const toast = document.createElement("div");
 
-    toast.className =
-        `toast toast-${type}`;
+    toast.className = `toast toast-${type}`;
 
-    toast.textContent =
-        message;
+    toast.textContent = message;
 
     container.appendChild(toast);
 
     setTimeout(() => {
-
-        toast.classList.add("show");
-
-    }, 10);
-
-    setTimeout(() => {
-
-        toast.classList.remove("show");
-
-        setTimeout(() => {
-
-            toast.remove();
-
-        }, 300);
-
-    }, 3500);
+        toast.remove();
+    }, 4000);
 }
 
-
-// ============================================================
-// MODAL
-// ============================================================
 
 function openModal(id) {
 
     const modal = $(id);
 
-    if (!modal) return;
-
-    modal.classList.remove("hidden");
-
-    document.body.classList.add("modal-open");
+    if (modal) {
+        modal.classList.remove("hidden");
+    }
 }
 
 
@@ -190,1168 +241,541 @@ function closeModal(id) {
 
     const modal = $(id);
 
-    if (!modal) return;
-
-    modal.classList.add("hidden");
-
-    const anyOpen =
-        document.querySelector(".modal:not(.hidden)");
-
-    if (!anyOpen) {
-
-        document.body.classList.remove("modal-open");
-
+    if (modal) {
+        modal.classList.add("hidden");
     }
 }
 
 
-$$("[data-close-modal]").forEach(button => {
+/* =========================================================
+   AUTHENTICATION
+========================================================= */
 
-    button.addEventListener("click", () => {
+async function ensureAuthentication() {
 
-        closeModal(
-            button.dataset.closeModal
-        );
-
-    });
-
-});
-
-
-$$(".modal").forEach(modal => {
-
-    modal.addEventListener("click", event => {
-
-        if (event.target === modal) {
-
-            closeModal(modal.id);
-
-        }
-
-    });
-
-});
-
-
-// ============================================================
-// AUTH MODE
-// ============================================================
-
-let authMode = "login";
-
-
-// ============================================================
-// AUTH BUTTON
-// ============================================================
-
-$("authButton")?.addEventListener("click", () => {
-
-    if (currentUser) {
-
-        loadCustomerProfileIntoForm();
-
-        openModal("profileModal");
-
-    } else {
-
-        authMode = "login";
-
-        updateAuthModal();
-
-        openModal("authModal");
-
+    if (auth.currentUser) {
+        currentUser = auth.currentUser;
+        return currentUser;
     }
-
-});
-
-
-// ============================================================
-// UPDATE AUTH MODAL
-// ============================================================
-
-function updateAuthModal() {
-
-    if (authMode === "register") {
-
-        $("authTitle").textContent =
-            "Create your account";
-
-        $("authDescription").textContent =
-            "Create a customer account using your email and password.";
-
-        $("authForm")
-            .querySelector("button[type='submit']")
-            .textContent =
-            "Create Account";
-
-        $("createAccountButton").textContent =
-            "Already have an account? Login";
-
-    } else {
-
-        $("authTitle").textContent =
-            "Login to FIX MY WORK";
-
-        $("authDescription").textContent =
-            "Login with your email address and password.";
-
-        $("authForm")
-            .querySelector("button[type='submit']")
-            .textContent =
-            "Login";
-
-        $("createAccountButton").textContent =
-            "Create new account";
-
-    }
-
-}
-
-
-// ============================================================
-// SWITCH LOGIN / REGISTER
-// ============================================================
-
-$("createAccountButton")?.addEventListener(
-    "click",
-    () => {
-
-        authMode =
-            authMode === "login"
-                ? "register"
-                : "login";
-
-        updateAuthModal();
-
-    }
-);
-
-
-// ============================================================
-// AUTH FORM
-// ============================================================
-
-$("authForm")?.addEventListener(
-    "submit",
-    async event => {
-
-        event.preventDefault();
-
-        const email =
-            $("authEmail").value.trim();
-
-        const password =
-            $("authPassword").value;
-
-        if (!email || !password) {
-
-            showToast(
-                "Please enter email and password.",
-                "error"
-            );
-
-            return;
-
-        }
-
-        try {
-
-            if (authMode === "register") {
-
-                const result =
-                    await createUserWithEmailAndPassword(
-                        auth,
-                        email,
-                        password
-                    );
-
-                await setDoc(
-                    doc(
-                        db,
-                        "customers",
-                        result.user.uid
-                    ),
-                    {
-
-                        uid:
-                            result.user.uid,
-
-                        email:
-                            email,
-
-                        name:
-                            "",
-
-                        phone:
-                            "",
-
-                        photoURL:
-                            "",
-
-                        createdAt:
-                            serverTimestamp(),
-
-                        updatedAt:
-                            serverTimestamp()
-
-                    },
-                    { merge: true }
-                );
-
-                showToast(
-                    "Account created successfully.",
-                    "success"
-                );
-
-            } else {
-
-                await signInWithEmailAndPassword(
-                    auth,
-                    email,
-                    password
-                );
-
-                showToast(
-                    "Login successful.",
-                    "success"
-                );
-
-            }
-
-            $("authForm").reset();
-
-            closeModal("authModal");
-
-        } catch (error) {
-
-            console.error(error);
-
-            showToast(
-                getFirebaseErrorMessage(error),
-                "error"
-            );
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// FIREBASE ERROR MESSAGE
-// ============================================================
-
-function getFirebaseErrorMessage(error) {
-
-    const code =
-        error?.code || "";
-
-    switch (code) {
-
-        case "auth/invalid-email":
-            return "Please enter a valid email address.";
-
-        case "auth/email-already-in-use":
-            return "This email is already registered.";
-
-        case "auth/weak-password":
-            return "Password must be at least 6 characters.";
-
-        case "auth/invalid-credential":
-            return "Incorrect email or password.";
-
-        case "auth/user-not-found":
-            return "Account not found.";
-
-        case "auth/wrong-password":
-            return "Incorrect password.";
-
-        case "auth/too-many-requests":
-            return "Too many attempts. Please try again later.";
-
-        default:
-            return error?.message ||
-                "Something went wrong. Please try again.";
-
-    }
-
-}
-
-
-// ============================================================
-// AUTH STATE
-// ============================================================
-
-onAuthStateChanged(
-    auth,
-    async user => {
-
-        currentUser = user;
-
-        if (user) {
-
-            await loadCustomer();
-
-            updateLoggedInUI();
-
-            subscribeToCustomerRequests();
-
-        } else {
-
-            currentCustomer = null;
-
-            updateLoggedOutUI();
-
-            if (unsubscribeCustomerRequests) {
-
-                unsubscribeCustomerRequests();
-
-                unsubscribeCustomerRequests = null;
-
-            }
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// LOAD CUSTOMER
-// ============================================================
-
-async function loadCustomer() {
-
-    if (!currentUser) return;
 
     try {
 
-        const customerRef =
-            doc(
-                db,
-                "customers",
-                currentUser.uid
-            );
+        const result = await signInAnonymously(auth);
 
-        const snapshot =
-            await getDoc(customerRef);
+        currentUser = result.user;
 
-        if (snapshot.exists()) {
+        await createCustomerProfile();
 
-            currentCustomer =
-                snapshot.data();
-
-        } else {
-
-            currentCustomer = {
-
-                uid:
-                    currentUser.uid,
-
-                email:
-                    currentUser.email || "",
-
-                name:
-                    currentUser.displayName || "",
-
-                phone:
-                    "",
-
-                photoURL:
-                    ""
-
-            };
-
-            await setDoc(
-                customerRef,
-                {
-                    ...currentCustomer,
-                    createdAt:
-                        serverTimestamp(),
-                    updatedAt:
-                        serverTimestamp()
-                },
-                { merge: true }
-            );
-
-        }
+        return currentUser;
 
     } catch (error) {
 
-        console.error(
-            "Customer loading error:",
-            error
-        );
+        console.error("Authentication error:", error);
 
         showToast(
-            "Unable to load your account.",
+            "Unable to connect to FIX MY WORK. Please try again.",
             "error"
         );
 
+        throw error;
     }
-
 }
 
 
-// ============================================================
-// LOGGED-IN UI
-// ============================================================
+/* =========================================================
+   CUSTOMER PROFILE
+========================================================= */
 
-function updateLoggedInUI() {
-
-    const button =
-        $("authButton");
-
-    if (!button) return;
-
-    button.textContent =
-        "My Account";
-
-}
-
-
-// ============================================================
-// LOGGED-OUT UI
-// ============================================================
-
-function updateLoggedOutUI() {
-
-    const button =
-        $("authButton");
-
-    if (!button) return;
-
-    button.textContent =
-        "Login";
-
-}
-
-
-// ============================================================
-// PROFILE
-// ============================================================
-
-function loadCustomerProfileIntoForm() {
+async function createCustomerProfile() {
 
     if (!currentUser) return;
 
-    const customer =
-        currentCustomer || {};
+    const customerRef =
+        doc(db, "customers", currentUser.uid);
 
-    $("profileName").value =
-        customer.name ||
-        currentUser.displayName ||
-        "";
+    const existing =
+        await getDoc(customerRef);
 
-    $("profilePhone").value =
-        customer.phone || "";
+    if (!existing.exists()) {
 
-    $("profileEmail").value =
-        currentUser.email || "";
+        await setDoc(customerRef, {
 
-    const image =
-        $("customerProfilePreview");
+            uid: currentUser.uid,
 
-    const placeholder =
-        $("profilePhotoPlaceholder");
+            role: "customer",
 
-    if (customer.photoURL) {
+            name: "",
 
-        image.src =
-            customer.photoURL;
+            email: "",
 
-        image.classList.remove("hidden");
+            phone: "",
 
-        placeholder.classList.add("hidden");
+            address: "",
 
-    } else {
+            latitude: null,
 
-        image.classList.add("hidden");
+            longitude: null,
 
-        placeholder.classList.remove("hidden");
+            createdAt: serverTimestamp(),
+
+            updatedAt: serverTimestamp()
+
+        });
 
     }
-
 }
 
 
-// ============================================================
-// PROFILE PHOTO PREVIEW
-// ============================================================
+/* =========================================================
+   AUTH STATE
+========================================================= */
 
-$("profilePhoto")?.addEventListener(
-    "change",
-    event => {
+onAuthStateChanged(auth, async (user) => {
 
-        const file =
-            event.target.files?.[0];
+    currentUser = user;
 
-        if (!file) return;
-
-        const url =
-            URL.createObjectURL(file);
-
-        $("customerProfilePreview").src =
-            url;
-
-        $("customerProfilePreview")
-            .classList.remove("hidden");
-
-        $("profilePhotoPlaceholder")
-            .classList.add("hidden");
-
-    }
-);
-
-
-// ============================================================
-// SAVE PROFILE
-// ============================================================
-
-$("profileForm")?.addEventListener(
-    "submit",
-    async event => {
-
-        event.preventDefault();
-
-        if (!currentUser) {
-
-            showToast(
-                "Please login first.",
-                "error"
-            );
-
-            return;
-
-        }
-
-        const name =
-            $("profileName")
-                .value
-                .trim();
-
-        const phone =
-            $("profilePhone")
-                .value
-                .trim();
-
-        const photoFile =
-            $("profilePhoto")
-                .files?.[0];
-
-        if (!name || !phone) {
-
-            showToast(
-                "Please complete your profile.",
-                "error"
-            );
-
-            return;
-
-        }
+    if (user) {
 
         try {
 
-            let photoURL =
-                currentCustomer?.photoURL || "";
+            await createCustomerProfile();
 
-            if (photoFile) {
+            updateAuthButton();
 
-                validateImage(photoFile);
-
-                const photoRef =
-                    ref(
-                        storage,
-                        `customers/${currentUser.uid}/profile/${Date.now()}_${photoFile.name}`
-                    );
-
-                await uploadBytes(
-                    photoRef,
-                    photoFile
-                );
-
-                photoURL =
-                    await getDownloadURL(photoRef);
-
-            }
-
-
-            await updateProfile(
-                currentUser,
-                {
-                    displayName:
-                        name,
-
-                    photoURL:
-                        photoURL || null
-                }
-            );
-
-
-            await setDoc(
-                doc(
-                    db,
-                    "customers",
-                    currentUser.uid
-                ),
-                {
-
-                    uid:
-                        currentUser.uid,
-
-                    email:
-                        currentUser.email || "",
-
-                    name:
-                        name,
-
-                    phone:
-                        phone,
-
-                    photoURL:
-                        photoURL,
-
-                    updatedAt:
-                        serverTimestamp()
-
-                },
-                { merge: true }
-            );
-
-
-            currentCustomer = {
-
-                ...(currentCustomer || {}),
-
-                name,
-                phone,
-                photoURL
-
-            };
-
-
-            showToast(
-                "Profile updated.",
-                "success"
-            );
-
-            closeModal("profileModal");
+            loadCustomerWorks();
 
         } catch (error) {
 
             console.error(error);
 
-            showToast(
-                getFirebaseErrorMessage(error),
-                "error"
-            );
-
         }
 
-    }
-);
+    } else {
 
-
-// ============================================================
-// LOGOUT
-// ============================================================
-
-$("logoutButton")?.addEventListener(
-    "click",
-    async () => {
-
-        try {
-
-            await signOut(auth);
-
-            closeModal("profileModal");
-
-            showToast(
-                "Logged out successfully.",
-                "success"
-            );
-
-        } catch (error) {
-
-            console.error(error);
-
-            showToast(
-                "Unable to logout.",
-                "error"
-            );
-
-        }
+        updateAuthButton();
 
     }
-);
+
+});
 
 
-// ============================================================
-// SERVICE CARDS
-// ============================================================
+function updateAuthButton() {
 
-$$(".service-card").forEach(card => {
+    const button = $("authButton");
 
-    card.addEventListener(
-        "click",
-        () => {
+    if (!button) return;
+
+    if (currentUser) {
+
+        button.textContent = "My Account";
+
+    } else {
+
+        button.textContent = "Login";
+
+    }
+}
+
+
+/* =========================================================
+   SERVICE SELECT — 100 SERVICES
+========================================================= */
+
+function populateServices() {
+
+    const select = $("serviceSelect");
+
+    if (!select) return;
+
+    select.innerHTML = "";
+
+    const first = document.createElement("option");
+
+    first.value = "";
+
+    first.textContent = "Select service";
+
+    select.appendChild(first);
+
+    SERVICES.forEach(service => {
+
+        const option = document.createElement("option");
+
+        option.value = service;
+
+        option.textContent = service;
+
+        select.appendChild(option);
+
+    });
+}
+
+
+/* =========================================================
+   SERVICE CARD EVENTS
+========================================================= */
+
+function setupServiceCards() {
+
+    document.querySelectorAll(".service-card").forEach(card => {
+
+        card.addEventListener("click", () => {
 
             const service =
                 card.dataset.service;
 
             openServiceRequest(service);
 
-        }
-    );
-
-});
-
-
-// ============================================================
-// REQUEST SERVICE BUTTON
-// ============================================================
-
-$("requestServiceButton")?.addEventListener(
-    "click",
-    () => {
-
-        openServiceRequest("");
-
-    }
-);
-
-
-$("emptyRequestButton")?.addEventListener(
-    "click",
-    () => {
-
-        openServiceRequest("");
-
-    }
-);
-
-
-// ============================================================
-// OPEN SERVICE REQUEST
-// ============================================================
-
-function openServiceRequest(service = "") {
-
-    if (!currentUser) {
-
-        authMode = "login";
-
-        updateAuthModal();
-
-        openModal("authModal");
-
-        showToast(
-            "Please login before booking a service.",
-            "info"
-        );
-
-        return;
-
-    }
-
-
-    selectedService =
-        service || "";
-
-    $("serviceSelect").value =
-        service || "";
-
-    $("servicePhone").value =
-        currentCustomer?.phone || "";
-
-
-    if (service) {
-
-        $("selectedServiceText").textContent =
-            `${service} selected. Tell us what needs to be fixed.`;
-
-    } else {
-
-        $("selectedServiceText").textContent =
-            "Select the service you need.";
-
-    }
-
-
-    openModal("serviceModal");
-
-}
-
-
-// ============================================================
-// VIEW ALL SERVICES
-// ============================================================
-
-$("viewAllServices")?.addEventListener(
-    "click",
-    () => {
-
-        document
-            .getElementById("services")
-            ?.scrollIntoView({
-                behavior: "smooth"
-            });
-
-    }
-);
-
-
-// ============================================================
-// SERVICE SELECT
-// ============================================================
-
-$("serviceSelect")?.addEventListener(
-    "change",
-    event => {
-
-        selectedService =
-            event.target.value;
-
-        if (selectedService) {
-
-            $("selectedServiceText")
-                .textContent =
-                `${selectedService} selected.`;
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// LOCATION STATE
-// ============================================================
-
-let customerLocation = {
-
-    latitude: null,
-
-    longitude: null
-
-};
-
-
-// ============================================================
-// GET LOCATION
-// ============================================================
-
-function getCustomerLocation() {
-
-    return new Promise(
-        (resolve, reject) => {
-
-            if (!navigator.geolocation) {
-
-                reject(
-                    new Error(
-                        "Geolocation is not supported."
-                    )
-                );
-
-                return;
-
-            }
-
-            navigator.geolocation.getCurrentPosition(
-
-                position => {
-
-                    customerLocation = {
-
-                        latitude:
-                            position.coords.latitude,
-
-                        longitude:
-                            position.coords.longitude
-
-                    };
-
-                    resolve(
-                        customerLocation
-                    );
-
-                },
-
-                error => {
-
-                    reject(error);
-
-                },
-
-                {
-
-                    enableHighAccuracy:
-                        true,
-
-                    timeout:
-                        15000,
-
-                    maximumAge:
-                        60000
-
-                }
-
-            );
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// LOCATION BUTTONS
-// ============================================================
-
-$("locationButton")?.addEventListener(
-    "click",
-    useCurrentLocation
-);
-
-
-$("useLocationButton")?.addEventListener(
-    "click",
-    useCurrentLocation
-);
-
-
-$("useLocationInRequest")?.addEventListener(
-    "click",
-    async () => {
-
-        try {
-
-            await useCurrentLocation();
-
-        } catch {
-
-            // handled inside function
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// USE CURRENT LOCATION
-// ============================================================
-
-async function useCurrentLocation() {
-
-    try {
-
-        showToast(
-            "Getting your location...",
-            "info"
-        );
-
-        const location =
-            await getCustomerLocation();
-
-
-        $("locationText").textContent =
-            "Location Ready";
-
-        $("mapStatus").textContent =
-            "Your location is ready";
-
-        $("nearbyCount").textContent =
-            "Ready for nearby matching";
-
-
-        if ($("serviceAddress").value.trim() === "") {
-
-            $("serviceAddress").value =
-                `Location coordinates: ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
-
-        }
-
-
-        showToast(
-            "Location detected successfully.",
-            "success"
-        );
-
-
-        return location;
-
-    } catch (error) {
-
-        console.error(error);
-
-        showToast(
-            "Location permission is required for nearby matching.",
-            "error"
-        );
-
-        throw error;
-
-    }
-
-}
-
-
-// ============================================================
-// SERVICE PHOTO PREVIEW
-// ============================================================
-
-$("servicePhoto")?.addEventListener(
-    "change",
-    event => {
-
-        previewFiles(
-            event.target.files,
-            $("photoPreview")
-        );
-
-    }
-);
-
-
-$("completionPhoto")?.addEventListener(
-    "change",
-    event => {
-
-        previewFiles(
-            event.target.files,
-            $("completionPhotoPreview")
-        );
-
-    }
-);
-
-
-// ============================================================
-// PREVIEW FILES
-// ============================================================
-
-function previewFiles(files, container) {
-
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    [...files].forEach(file => {
-
-        try {
-
-            validateImage(file);
-
-            const image =
-                document.createElement("img");
-
-            image.src =
-                URL.createObjectURL(file);
-
-            image.alt =
-                "Selected photo";
-
-            container.appendChild(image);
-
-        } catch (error) {
-
-            showToast(
-                error.message,
-                "error"
-            );
-
-        }
+        });
 
     });
 
 }
 
 
-// ============================================================
-// IMAGE VALIDATION
-// ============================================================
+/* =========================================================
+   OPEN SERVICE REQUEST
+========================================================= */
 
-function validateImage(file) {
+function openServiceRequest(service = "") {
 
-    const allowed =
-        [
-            "image/jpeg",
-            "image/png",
-            "image/webp"
-        ];
+    selectedService = service;
 
-    if (!allowed.includes(file.type)) {
+    const select = $("serviceSelect");
 
-        throw new Error(
-            "Only JPG, PNG or WEBP images are allowed."
-        );
+    const text = $("selectedServiceText");
+
+    if (select && service) {
+
+        const exists =
+            [...select.options]
+                .some(option => option.value === service);
+
+        if (exists) {
+            select.value = service;
+        }
+
+    }
+
+    if (text) {
+
+        text.textContent = service
+
+            ? `Requesting ${service}. Tell us what needs to be fixed.`
+
+            : "Tell us what you need.";
 
     }
 
-    const maxSize =
-        8 * 1024 * 1024;
+    openModal("serviceModal");
+}
 
-    if (file.size > maxSize) {
 
-        throw new Error(
-            "Each image must be smaller than 8 MB."
+/* =========================================================
+   LOCATION
+========================================================= */
+
+function getCurrentLocation() {
+
+    if (!navigator.geolocation) {
+
+        showToast(
+            "Location is not supported on this device.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    showToast(
+        "Getting your location...",
+        "info"
+    );
+
+    navigator.geolocation.getCurrentPosition(
+
+        async (position) => {
+
+            selectedLocation = {
+
+                latitude:
+                    position.coords.latitude,
+
+                longitude:
+                    position.coords.longitude
+
+            };
+
+            await saveCustomerLocation();
+
+            updateLocationUI();
+
+            showToast(
+                "Location updated successfully.",
+                "success"
+            );
+
+        },
+
+        (error) => {
+
+            console.error(error);
+
+            showToast(
+                "Please allow location permission.",
+                "error"
+            );
+
+        },
+
+        {
+            enableHighAccuracy: true,
+
+            timeout: 15000,
+
+            maximumAge: 30000
+        }
+
+    );
+}
+
+
+/* =========================================================
+   SAVE CUSTOMER LOCATION
+========================================================= */
+
+async function saveCustomerLocation() {
+
+    if (!currentUser || !selectedLocation) return;
+
+    try {
+
+        await updateDoc(
+            doc(db, "customers", currentUser.uid),
+            {
+
+                latitude:
+                    selectedLocation.latitude,
+
+                longitude:
+                    selectedLocation.longitude,
+
+                updatedAt:
+                    serverTimestamp()
+
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Location save error:",
+            error
         );
 
     }
+}
+
+
+/* =========================================================
+   LOCATION UI
+========================================================= */
+
+function updateLocationUI() {
+
+    const locationText =
+        $("locationText");
+
+    const mapStatus =
+        $("mapStatus");
+
+    const nearbyCount =
+        $("nearbyCount");
+
+    if (locationText) {
+
+        locationText.textContent =
+            "Location Set";
+
+    }
+
+    if (mapStatus) {
+
+        mapStatus.textContent =
+            "Your location is ready";
+
+    }
+
+    if (nearbyCount) {
+
+        nearbyCount.textContent =
+            "Matching professionals";
+
+    }
+}
+
+
+/* =========================================================
+   MAP PLACEHOLDER
+========================================================= */
+
+function initializeMapUI() {
+
+    const map =
+        $("map");
+
+    if (!map) return;
+
+    /*
+       Real map integration can be connected later.
+       Customer location is still stored in Firestore.
+    */
+
+    map.dataset.mapReady = "true";
+}
+
+
+/* =========================================================
+   PHOTO PREVIEW
+========================================================= */
+
+function setupPhotoUpload() {
+
+    const input =
+        $("servicePhoto");
+
+    const preview =
+        $("photoPreview");
+
+    if (!input) return;
+
+    input.addEventListener("change", () => {
+
+        selectedPhotos =
+            [...input.files];
+
+        if (!preview) return;
+
+        preview.innerHTML = "";
+
+        selectedPhotos.forEach(file => {
+
+            const reader =
+                new FileReader();
+
+            reader.onload = (event) => {
+
+                const img =
+                    document.createElement("img");
+
+                img.src =
+                    event.target.result;
+
+                img.alt =
+                    "Selected service photo";
+
+                img.className =
+                    "uploaded-photo-preview";
+
+                preview.appendChild(img);
+
+            };
+
+            reader.readAsDataURL(file);
+
+        });
+
+    });
 
 }
 
 
-// ============================================================
-// CREATE SERVICE REQUEST
-// ============================================================
+/* =========================================================
+   UPLOAD SERVICE PHOTOS
+========================================================= */
 
-$("serviceForm")?.addEventListener(
-    "submit",
-    async event => {
+async function uploadServicePhotos(orderId) {
 
-        event.preventDefault();
+    if (!selectedPhotos.length) {
 
-        if (!currentUser) {
+        return [];
 
-            showToast(
-                "Please login first.",
-                "error"
-            );
+    }
 
-            return;
+    const uploadedUrls = [];
+
+    for (let i = 0; i < selectedPhotos.length; i++) {
+
+        const file =
+            selectedPhotos[i];
+
+        if (!file.type.startsWith("image/")) {
+
+            continue;
 
         }
 
+        if (file.size > 5 * 1024 * 1024) {
+
+            showToast(
+                "One photo was larger than 5MB and skipped.",
+                "error"
+            );
+
+            continue;
+
+        }
+
+        const fileName =
+            `${Date.now()}_${i}_${file.name}`;
+
+        const storageRef =
+            ref(
+                storage,
+                `serviceRequests/${currentUser.uid}/${orderId}/${fileName}`
+            );
+
+        await uploadBytes(
+            storageRef,
+            file
+        );
+
+        const url =
+            await getDownloadURL(storageRef);
+
+        uploadedUrls.push(url);
+
+    }
+
+    return uploadedUrls;
+}
+
+
+/* =========================================================
+   CREATE SERVICE REQUEST
+========================================================= */
+
+async function createServiceRequest(event) {
+
+    event.preventDefault();
+
+    if (isSubmittingOrder) return;
+
+    isSubmittingOrder = true;
+
+    try {
+
+        await ensureAuthentication();
 
         const service =
-            $("serviceSelect")
-                .value
-                .trim();
-
-        const phone =
-            $("servicePhone")
-                .value
-                .trim();
+            $("serviceSelect")?.value.trim();
 
         const description =
-            $("problemDescription")
-                .value
-                .trim();
+            $("problemDescription")?.value.trim();
 
         const address =
-            $("serviceAddress")
-                .value
-                .trim();
-
-        const photoFiles =
-            [...(
-                $("servicePhoto")
-                    .files || []
-            )];
-
+            $("serviceAddress")?.value.trim();
 
         if (!service) {
 
@@ -1361,18 +785,6 @@ $("serviceForm")?.addEventListener(
             );
 
             return;
-
-        }
-
-        if (!phone) {
-
-            showToast(
-                "Please enter your mobile number.",
-                "error"
-            );
-
-            return;
-
         }
 
         if (!description) {
@@ -1383,7 +795,6 @@ $("serviceForm")?.addEventListener(
             );
 
             return;
-
         }
 
         if (!address) {
@@ -1394,744 +805,1012 @@ $("serviceForm")?.addEventListener(
             );
 
             return;
+        }
+
+
+        /* -----------------------------------------
+           CREATE ORDER
+        ----------------------------------------- */
+
+        const orderData = {
+
+            customerId:
+                currentUser.uid,
+
+            customerName: "",
+
+            customerPhone: "",
+
+            customerEmail: "",
+
+            service,
+
+            description,
+
+            address,
+
+            customerLatitude:
+                selectedLocation?.latitude ?? null,
+
+            customerLongitude:
+                selectedLocation?.longitude ?? null,
+
+            photoUrls: [],
+
+            status: "searching",
+
+            workerId: null,
+
+            workerName: null,
+
+            workerPhone: null,
+
+            workerPhoto: null,
+
+            workerRating: null,
+
+            workerService: null,
+
+            acceptedAt: null,
+
+            completedAt: null,
+
+            cancelledAt: null,
+
+            cancelReason: null,
+
+            createdAt:
+                serverTimestamp(),
+
+            updatedAt:
+                serverTimestamp()
+
+        };
+
+
+        const orderRef =
+            await addDoc(
+                collection(db, "serviceRequests"),
+                orderData
+            );
+
+        currentOrderId =
+            orderRef.id;
+
+
+        /* -----------------------------------------
+           UPLOAD PHOTOS AFTER ORDER CREATION
+        ----------------------------------------- */
+
+        const photoUrls =
+            await uploadServicePhotos(
+                currentOrderId
+            );
+
+        if (photoUrls.length) {
+
+            await updateDoc(
+                orderRef,
+                {
+
+                    photoUrls,
+
+                    updatedAt:
+                        serverTimestamp()
+
+                }
+            );
 
         }
 
 
-        if (
-            !customerLocation.latitude ||
-            !customerLocation.longitude
-        ) {
+        /* -----------------------------------------
+           CLOSE FORM
+        ----------------------------------------- */
 
-            try {
+        closeModal("serviceModal");
 
-                await getCustomerLocation();
+        clearServiceForm();
 
-            } catch {
 
-                showToast(
-                    "Please enable location so we can find nearby professionals.",
-                    "error"
-                );
+        /* -----------------------------------------
+           SHOW SEARCHING
+        ----------------------------------------- */
 
-                return;
+        showSearchingState(
+            currentOrderId,
+            service
+        );
 
-            }
 
-        }
+        /* -----------------------------------------
+           START REALTIME LISTENER
+        ----------------------------------------- */
 
+        listenToCurrentOrder(
+            currentOrderId
+        );
 
-        try {
 
-            const submitButton =
-                $("submitServiceButton");
+        showToast(
+            "Service request created.",
+            "success"
+        );
 
-            submitButton.disabled =
-                true;
 
-            submitButton.textContent =
-                "Creating Request...";
+    } catch (error) {
 
+        console.error(
+            "Create order error:",
+            error
+        );
 
-            // =================================================
-            // UPLOAD CUSTOMER REQUEST PHOTOS
-            // =================================================
+        showToast(
+            "Unable to create service request.",
+            "error"
+        );
 
-            const photoURLs = [];
+    } finally {
 
-            for (
-                const file
-                of photoFiles
-            ) {
-
-                validateImage(file);
-
-                const photoRef =
-                    ref(
-                        storage,
-                        `serviceRequests/${currentUser.uid}/${Date.now()}_${file.name}`
-                    );
-
-                await uploadBytes(
-                    photoRef,
-                    file
-                );
-
-                const url =
-                    await getDownloadURL(
-                        photoRef
-                    );
-
-                photoURLs.push(url);
-
-            }
-
-
-            // =================================================
-            // REQUEST DATA
-            // =================================================
-
-            const requestData = {
-
-                customerId:
-                    currentUser.uid,
-
-                customerName:
-                    currentCustomer?.name ||
-                    currentUser.displayName ||
-                    "",
-
-                customerEmail:
-                    currentUser.email ||
-                    "",
-
-                customerPhone:
-                    phone,
-
-                customerPhotoURL:
-                    currentCustomer?.photoURL ||
-                    "",
-
-
-                service:
-                    service,
-
-                description:
-                    description,
-
-                address:
-                    address,
-
-
-                location: {
-
-                    latitude:
-                        customerLocation.latitude,
-
-                    longitude:
-                        customerLocation.longitude
-
-                },
-
-
-                photos:
-                    photoURLs,
-
-
-                status:
-                    "searching",
-
-
-                acceptedWorkerId:
-                    null,
-
-                acceptedWorkerName:
-                    null,
-
-                acceptedWorkerPhone:
-                    null,
-
-                acceptedWorkerPhotoURL:
-                    null,
-
-                acceptedAt:
-                    null,
-
-
-                cancelledBy:
-                    null,
-
-                cancellationReason:
-                    null,
-
-
-                createdAt:
-                    serverTimestamp(),
-
-                updatedAt:
-                    serverTimestamp()
-
-            };
-
-
-            // =================================================
-            // CREATE REQUEST
-            // =================================================
-
-            const requestRef =
-                await addDoc(
-                    collection(
-                        db,
-                        "serviceRequests"
-                    ),
-                    requestData
-                );
-
-
-            currentRequestId =
-                requestRef.id;
-
-
-            $("serviceForm").reset();
-
-            $("photoPreview").innerHTML =
-                "";
-
-            closeModal("serviceModal");
-
-
-            // =================================================
-            // SHOW SEARCHING
-            // =================================================
-
-            showSearchingScreen(
-                requestRef.id,
-                service
-            );
-
-
-            // =================================================
-            // WATCH REQUEST
-            // =================================================
-
-            listenToCurrentRequest(
-                requestRef.id
-            );
-
-
-            showToast(
-                "Service request created.",
-                "success"
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Request creation error:",
-                error
-            );
-
-            showToast(
-                "Unable to create the service request.",
-                "error"
-            );
-
-        } finally {
-
-            const submitButton =
-                $("submitServiceButton");
-
-            if (submitButton) {
-
-                submitButton.disabled =
-                    false;
-
-                submitButton.textContent =
-                    "Find a Professional";
-
-            }
-
-        }
+        isSubmittingOrder = false;
 
     }
-);
-
-
-// ============================================================
-// SHOW SEARCHING SCREEN
-// ============================================================
-
-function showSearchingScreen(
-    requestId,
-    service
-) {
-
-    currentRequestId =
-        requestId;
-
-    $("searchingService")
-        .textContent =
-        service;
-
-    $("searchingStatus")
-        .textContent =
-        "Searching for available professionals...";
-
-    openModal(
-        "searchingModal"
-    );
 
 }
 
 
-// ============================================================
-// LISTEN TO CURRENT REQUEST
-// ============================================================
+/* =========================================================
+   CLEAR SERVICE FORM
+========================================================= */
 
-let unsubscribeCurrentRequest = null;
+function clearServiceForm() {
+
+    const form =
+        $("serviceForm");
+
+    if (form) {
+        form.reset();
+    }
+
+    selectedPhotos = [];
+
+    selectedService = "";
+
+    const preview =
+        $("photoPreview");
+
+    if (preview) {
+        preview.innerHTML = "";
+    }
+
+}
 
 
-function listenToCurrentRequest(requestId) {
+/* =========================================================
+   SEARCHING UI
+========================================================= */
 
-    if (unsubscribeCurrentRequest) {
+function showSearchingState(orderId, service) {
 
-        unsubscribeCurrentRequest();
+    const works =
+        $("worksContainer");
+
+    if (!works) return;
+
+    works.innerHTML = `
+
+        <div class="work-card searching-card">
+
+            <div class="searching-animation">
+
+                <div class="search-spinner"></div>
+
+            </div>
+
+            <span class="eyebrow">
+                SERVICE REQUEST
+            </span>
+
+            <h3>
+                Searching for a professional...
+            </h3>
+
+            <p>
+                We are looking for an available
+                ${escapeHTML(service)}
+                professional near you.
+            </p>
+
+            <div class="order-status">
+
+                <span class="status-dot"></span>
+
+                Searching
+
+            </div>
+
+            <small>
+                Order ID: ${escapeHTML(orderId)}
+            </small>
+
+            <button
+                id="cancelSearchingButton"
+                class="secondary-button"
+                type="button"
+            >
+                Cancel Request
+            </button>
+
+        </div>
+    `;
+
+
+    const cancelButton =
+        $("cancelSearchingButton");
+
+    if (cancelButton) {
+
+        cancelButton.addEventListener(
+            "click",
+            () => cancelCurrentOrder()
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   REALTIME ORDER LISTENER
+========================================================= */
+
+function listenToCurrentOrder(orderId) {
+
+    if (currentOrderUnsubscribe) {
+
+        currentOrderUnsubscribe();
+
+        currentOrderUnsubscribe = null;
 
     }
 
 
-    const requestRef =
+    const orderRef =
         doc(
             db,
             "serviceRequests",
-            requestId
+            orderId
         );
 
 
-    unsubscribeCurrentRequest =
+    currentOrderUnsubscribe =
         onSnapshot(
-            requestRef,
-            snapshot => {
+
+            orderRef,
+
+            (snapshot) => {
 
                 if (!snapshot.exists()) {
+
+                    showToast(
+                        "This service request no longer exists.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+                const order =
+                    snapshot.data();
+
+                renderOrderStatus(
+                    orderId,
+                    order
+                );
+
+            },
+
+            (error) => {
+
+                console.error(
+                    "Order listener error:",
+                    error
+                );
+
+            }
+
+        );
+
+}
+
+
+/* =========================================================
+   RENDER ORDER STATUS
+========================================================= */
+
+function renderOrderStatus(orderId, order) {
+
+    if (!order) return;
+
+
+    /* =============================================
+       SEARCHING
+    ============================================= */
+
+    if (order.status === "searching") {
+
+        showSearchingState(
+            orderId,
+            order.service
+        );
+
+        return;
+
+    }
+
+
+    /* =============================================
+       ACCEPTED
+    ============================================= */
+
+    if (order.status === "accepted") {
+
+        renderAcceptedOrder(
+            orderId,
+            order
+        );
+
+        return;
+
+    }
+
+
+    /* =============================================
+       WORKER CANCELLED
+    ============================================= */
+
+    if (order.status === "worker_cancelled") {
+
+        renderWorkerCancelled(
+            orderId,
+            order
+        );
+
+        return;
+
+    }
+
+
+    /* =============================================
+       IN PROGRESS
+    ============================================= */
+
+    if (order.status === "in_progress") {
+
+        renderInProgressOrder(
+            orderId,
+            order
+        );
+
+        return;
+
+    }
+
+
+    /* =============================================
+       COMPLETED
+    ============================================= */
+
+    if (order.status === "completed") {
+
+        renderCompletedOrder(
+            orderId,
+            order
+        );
+
+        return;
+
+    }
+
+
+    /* =============================================
+       CUSTOMER CANCELLED
+    ============================================= */
+
+    if (order.status === "customer_cancelled") {
+
+        renderCancelledOrder(
+            orderId,
+            order
+        );
+
+        return;
+
+    }
+
+}
+
+
+/* =========================================================
+   ACCEPTED ORDER
+========================================================= */
+
+function renderAcceptedOrder(orderId, order) {
+
+    const works =
+        $("worksContainer");
+
+    if (!works) return;
+
+
+    const workerName =
+        order.workerName || "Professional";
+
+    const workerPhone =
+        order.workerPhone || "";
+
+    const workerRating =
+        order.workerRating ?? "New";
+
+    works.innerHTML = `
+
+        <div class="work-card accepted-card">
+
+            <div class="order-success">
+                ✓
+            </div>
+
+            <span class="eyebrow">
+                PROFESSIONAL FOUND
+            </span>
+
+            <h3>
+                ${escapeHTML(workerName)}
+                accepted your request
+            </h3>
+
+            <div class="order-status accepted-status">
+                <span class="status-dot"></span>
+                Accepted
+            </div>
+
+
+            <div class="worker-details">
+
+                <h4>
+                    Worker Details
+                </h4>
+
+                <div class="detail-row">
+
+                    <strong>Name</strong>
+
+                    <span>
+                        ${escapeHTML(workerName)}
+                    </span>
+
+                </div>
+
+                <div class="detail-row">
+
+                    <strong>Service</strong>
+
+                    <span>
+                        ${escapeHTML(
+                            order.workerService ||
+                            order.service ||
+                            ""
+                        )}
+                    </span>
+
+                </div>
+
+                <div class="detail-row">
+
+                    <strong>Rating</strong>
+
+                    <span>
+                        ⭐ ${escapeHTML(
+                            String(workerRating)
+                        )}
+                    </span>
+
+                </div>
+
+                ${
+                    workerPhone
+                    ? `
+                    <div class="detail-row">
+
+                        <strong>Phone</strong>
+
+                        <span>
+                            ${escapeHTML(workerPhone)}
+                        </span>
+
+                    </div>
+                    `
+                    : ""
+                }
+
+            </div>
+
+
+            ${
+                workerPhone
+                ? `
+                <a
+                    class="primary-button full"
+                    href="tel:${escapeHTML(workerPhone)}"
+                >
+                    📞 Call Professional
+                </a>
+                `
+                : `
+                <div class="form-safety">
+                    Worker contact details will appear here
+                    when available.
+                </div>
+                `
+            }
+
+
+            <div class="job-details">
+
+                <h4>
+                    Your Work
+                </h4>
+
+                <p>
+                    <strong>Service:</strong>
+                    ${escapeHTML(order.service || "")}
+                </p>
+
+                <p>
+                    <strong>Problem:</strong>
+                    ${escapeHTML(order.description || "")}
+                </p>
+
+                <p>
+                    <strong>Location:</strong>
+                    ${escapeHTML(order.address || "")}
+                </p>
+
+            </div>
+
+
+            <button
+                id="cancelAcceptedOrderButton"
+                class="secondary-button full"
+                type="button"
+            >
+                Cancel Request
+            </button>
+
+        </div>
+    `;
+
+
+    const cancelButton =
+        $("cancelAcceptedOrderButton");
+
+    if (cancelButton) {
+
+        cancelButton.addEventListener(
+            "click",
+            () => cancelCurrentOrder()
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   WORKER CANCELLED
+========================================================= */
+
+function renderWorkerCancelled(orderId, order) {
+
+    const works =
+        $("worksContainer");
+
+    if (!works) return;
+
+    works.innerHTML = `
+
+        <div class="work-card">
+
+            <div class="order-warning">
+                ⚠️
+            </div>
+
+            <h3>
+                Professional cancelled
+            </h3>
+
+            <p>
+                The professional could not take this work.
+                You can try booking again.
+            </p>
+
+            <button
+                id="retryServiceButton"
+                class="primary-button"
+                type="button"
+            >
+                Try Again
+            </button>
+
+        </div>
+    `;
+
+
+    const retry =
+        $("retryServiceButton");
+
+    if (retry) {
+
+        retry.addEventListener(
+            "click",
+            () => {
+
+                openServiceRequest(
+                    order.service
+                );
+
+            }
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   IN PROGRESS
+========================================================= */
+
+function renderInProgressOrder(orderId, order) {
+
+    const works =
+        $("worksContainer");
+
+    if (!works) return;
+
+    works.innerHTML = `
+
+        <div class="work-card">
+
+            <div class="order-success">
+                🔧
+            </div>
+
+            <span class="eyebrow">
+                WORK IN PROGRESS
+            </span>
+
+            <h3>
+                ${escapeHTML(
+                    order.workerName ||
+                    "Professional"
+                )}
+                is working on your request.
+            </h3>
+
+            <div class="order-status">
+                <span class="status-dot"></span>
+                Work in progress
+            </div>
+
+            ${
+                order.workerPhone
+                ? `
+                <a
+                    class="primary-button full"
+                    href="tel:${escapeHTML(
+                        order.workerPhone
+                    )}"
+                >
+                    📞 Call Professional
+                </a>
+                `
+                : ""
+            }
+
+            <div class="job-details">
+
+                <p>
+                    <strong>Service:</strong>
+                    ${escapeHTML(order.service || "")}
+                </p>
+
+                <p>
+                    <strong>Problem:</strong>
+                    ${escapeHTML(order.description || "")}
+                </p>
+
+            </div>
+
+        </div>
+    `;
+
+}
+
+
+/* =========================================================
+   COMPLETED
+========================================================= */
+
+function renderCompletedOrder(orderId, order) {
+
+    const works =
+        $("worksContainer");
+
+    if (!works) return;
+
+    works.innerHTML = `
+
+        <div class="work-card">
+
+            <div class="order-success">
+                ✓
+            </div>
+
+            <span class="eyebrow">
+                COMPLETED
+            </span>
+
+            <h3>
+                Work completed successfully
+            </h3>
+
+            <p>
+                ${escapeHTML(
+                    order.workerName ||
+                    "Professional"
+                )}
+                completed your
+                ${escapeHTML(
+                    order.service || "service"
+                )}
+                request.
+            </p>
+
+            <div class="order-status">
+                <span class="status-dot"></span>
+                Completed
+            </div>
+
+            <button
+                id="newServiceAfterComplete"
+                class="primary-button"
+                type="button"
+            >
+                Book Another Service
+            </button>
+
+        </div>
+    `;
+
+
+    const button =
+        $("newServiceAfterComplete");
+
+    if (button) {
+
+        button.addEventListener(
+            "click",
+            () => openServiceRequest()
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CUSTOMER CANCELLED
+========================================================= */
+
+function renderCancelledOrder(orderId, order) {
+
+    const works =
+        $("worksContainer");
+
+    if (!works) return;
+
+    works.innerHTML = `
+
+        <div class="work-card">
+
+            <div class="order-warning">
+                ✕
+            </div>
+
+            <h3>
+                Service request cancelled
+            </h3>
+
+            <p>
+                This request has been cancelled.
+            </p>
+
+            <button
+                id="bookAgainButton"
+                class="primary-button"
+                type="button"
+            >
+                Book Again
+            </button>
+
+        </div>
+    `;
+
+
+    const button =
+        $("bookAgainButton");
+
+    if (button) {
+
+        button.addEventListener(
+            "click",
+            () => openServiceRequest(
+                order.service
+            )
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CANCEL CURRENT ORDER
+========================================================= */
+
+async function cancelCurrentOrder() {
+
+    if (!currentOrderId) {
+
+        showToast(
+            "No active request found.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    if (!currentUser) return;
+
+
+    const confirmed =
+        confirm(
+            "Are you sure you want to cancel this service request?"
+        );
+
+    if (!confirmed) return;
+
+
+    try {
+
+        await updateDoc(
+
+            doc(
+                db,
+                "serviceRequests",
+                currentOrderId
+            ),
+
+            {
+
+                status:
+                    "customer_cancelled",
+
+                cancelledAt:
+                    serverTimestamp(),
+
+                cancelReason:
+                    "Cancelled by customer",
+
+                updatedAt:
+                    serverTimestamp()
+
+            }
+
+        );
+
+
+        showToast(
+            "Service request cancelled.",
+            "success"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Cancel error:",
+            error
+        );
+
+        showToast(
+            "Unable to cancel request.",
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   MY WORKS / HISTORY
+========================================================= */
+
+function loadCustomerWorks() {
+
+    if (!currentUser) return;
+
+
+    if (currentHistoryUnsubscribe) {
+
+        currentHistoryUnsubscribe();
+
+        currentHistoryUnsubscribe = null;
+
+    }
+
+
+    const worksQuery =
+        query(
+
+            collection(
+                db,
+                "serviceRequests"
+            ),
+
+            where(
+                "customerId",
+                "==",
+                currentUser.uid
+            ),
+
+            orderBy(
+                "createdAt",
+                "desc"
+            ),
+
+            limit(50)
+
+        );
+
+
+    currentHistoryUnsubscribe =
+        onSnapshot(
+
+            worksQuery,
+
+            (snapshot) => {
+
+                if (
+                    snapshot.empty &&
+                    !currentOrderId
+                ) {
+
+                    showEmptyWorks();
 
                     return;
 
                 }
 
 
-                const request =
-                    snapshot.data();
-
-
-                handleRequestStatus(
-                    requestId,
-                    request
-                );
-
-            },
-
-            error => {
-
-                console.error(
-                    "Request listener error:",
-                    error
-                );
-
-            }
-        );
-
-}
-
-
-// ============================================================
-// HANDLE REQUEST STATUS
-// ============================================================
-
-function handleRequestStatus(
-    requestId,
-    request
-) {
-
-    currentRequestId =
-        requestId;
-
-
-    if (request.status === "searching") {
-
-        $("searchingStatus")
-            .textContent =
-            "Searching for available professionals...";
-
-        return;
-
-    }
-
-
-    if (request.status === "accepted") {
-
-        closeModal(
-            "searchingModal"
-        );
-
-        showWorkerDetails(
-            request
-        );
-
-        return;
-
-    }
-
-
-    if (
-        request.status === "cancelled"
-    ) {
-
-        closeModal(
-            "searchingModal"
-        );
-
-        showToast(
-            "This service request was cancelled.",
-            "info"
-        );
-
-        return;
-
-    }
-
-
-    if (
-        request.status === "completed"
-    ) {
-
-        closeModal(
-            "searchingModal"
-        );
-
-        showFeedbackModal(
-            requestId
-        );
-
-        return;
-
-    }
-
-}
-
-
-// ============================================================
-// CANCEL SEARCHING
-// ============================================================
-
-$("cancelSearchingButton")?.addEventListener(
-    "click",
-    async () => {
-
-        if (!currentRequestId) {
-
-            closeModal(
-                "searchingModal"
-            );
-
-            return;
-
-        }
-
-
-        const confirmed =
-            confirm(
-                "Cancel this service request?"
-            );
-
-        if (!confirmed) return;
-
-
-        try {
-
-            await updateDoc(
-                doc(
-                    db,
-                    "serviceRequests",
-                    currentRequestId
-                ),
-                {
-
-                    status:
-                        "cancelled",
-
-                    cancelledBy:
-                        "customer",
-
-                    cancellationReason:
-                        "Customer cancelled while searching.",
-
-                    updatedAt:
-                        serverTimestamp()
-
-                }
-            );
-
-
-            closeModal(
-                "searchingModal"
-            );
-
-
-            showToast(
-                "Service request cancelled.",
-                "success"
-            );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            showToast(
-                "Unable to cancel request.",
-                "error"
-            );
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// SHOW WORKER DETAILS
-// ============================================================
-
-function showWorkerDetails(request) {
-
-    currentWorker = {
-
-        id:
-            request.acceptedWorkerId,
-
-        name:
-            request.acceptedWorkerName,
-
-        phone:
-            request.acceptedWorkerPhone,
-
-        photoURL:
-            request.acceptedWorkerPhotoURL,
-
-        service:
-            request.service,
-
-        rating:
-            request.acceptedWorkerRating,
-
-        experience:
-            request.acceptedWorkerExperience
-
-    };
-
-
-    $("workerName")
-        .textContent =
-        currentWorker.name ||
-        "Professional";
-
-
-    $("workerService")
-        .textContent =
-        currentWorker.service ||
-        request.service ||
-        "Service";
-
-
-    $("workerPhone")
-        .textContent =
-        currentWorker.phone
-            ? `📞 ${currentWorker.phone}`
-            : "Mobile number available";
-
-
-    $("workerRating")
-        .textContent =
-        currentWorker.rating
-            ? `⭐ ${currentWorker.rating}`
-            : "⭐ Rating available";
-
-
-    $("workerExperience")
-        .textContent =
-        currentWorker.experience
-            ? `Experience: ${currentWorker.experience}`
-            : "Verified professional";
-
-
-    $("workerStatus")
-        .textContent =
-        "✓ Professional accepted your request.";
-
-
-    const photo =
-        $("workerProfilePhoto");
-
-    const placeholder =
-        $("workerPhotoPlaceholder");
-
-
-    if (currentWorker.photoURL) {
-
-        photo.src =
-            currentWorker.photoURL;
-
-        photo.classList.remove(
-            "hidden"
-        );
-
-        placeholder.classList.add(
-            "hidden"
-        );
-
-    } else {
-
-        photo.classList.add(
-            "hidden"
-        );
-
-        placeholder.classList.remove(
-            "hidden"
-        );
-
-    }
-
-
-    const callButton =
-        $("callWorkerButton");
-
-
-    if (currentWorker.phone) {
-
-        callButton.href =
-            `tel:${currentWorker.phone}`;
-
-        callButton.classList.remove(
-            "disabled"
-        );
-
-    } else {
-
-        callButton.href =
-            "#";
-
-        callButton.classList.add(
-            "disabled"
-        );
-
-    }
-
-
-    openModal(
-        "workerDetailsModal"
-    );
-
-}
-
-
-// ============================================================
-// CUSTOMER CANCEL AFTER ACCEPT
-// ============================================================
-
-$("workerCancelButton")?.addEventListener(
-    "click",
-    async () => {
-
-        if (!currentRequestId) return;
-
-
-        const confirmed =
-            confirm(
-                "Do you want to cancel this accepted work?"
-            );
-
-        if (!confirmed) return;
-
-
-        try {
-
-            await updateDoc(
-                doc(
-                    db,
-                    "serviceRequests",
-                    currentRequestId
-                ),
-                {
-
-                    status:
-                        "cancelled",
-
-                    cancelledBy:
-                        "customer",
-
-                    cancellationReason:
-                        "Customer cancelled after acceptance.",
-
-                    updatedAt:
-                        serverTimestamp()
-
-                }
-            );
-
-
-            closeModal(
-                "workerDetailsModal"
-            );
-
-
-            showToast(
-                "Work cancelled.",
-                "success"
-            );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            showToast(
-                "Unable to cancel the work.",
-                "error"
-            );
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// CUSTOMER REQUEST HISTORY
-// ============================================================
-
-function subscribeToCustomerRequests() {
-
-    if (!currentUser) return;
-
-
-    if (unsubscribeCustomerRequests) {
-
-        unsubscribeCustomerRequests();
-
-    }
-
-
-    const requestsQuery =
-        query(
-            collection(
-                db,
-                "serviceRequests"
-            ),
-            where(
-                "customerId",
-                "==",
-                currentUser.uid
-            ),
-            orderBy(
-                "createdAt",
-                "desc"
-            )
-        );
-
-
-    unsubscribeCustomerRequests =
-        onSnapshot(
-            requestsQuery,
-            snapshot => {
-
-                const requests =
+                const orders =
                     snapshot.docs.map(
                         document => ({
 
-                            id:
-                                document.id,
+                            id: document.id,
 
                             ...document.data()
 
@@ -2139,805 +1818,861 @@ function subscribeToCustomerRequests() {
                     );
 
 
-                renderCustomerWorks(
-                    requests
+                renderWorksHistory(
+                    orders
                 );
 
             },
 
-            error => {
+            (error) => {
 
                 console.error(
                     "History error:",
                     error
                 );
 
+                /*
+                   If composite index is not yet created,
+                   the live order listener still works.
+                */
+
             }
+
         );
 
 }
 
 
-// ============================================================
-// RENDER CUSTOMER WORKS
-// ============================================================
+/* =========================================================
+   EMPTY WORKS
+========================================================= */
 
-function renderCustomerWorks(
-    requests
-) {
+function showEmptyWorks() {
 
-    const container =
+    const works =
         $("worksContainer");
 
-    if (!container) return;
+    if (!works) return;
+
+    works.innerHTML = `
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                📋
+            </div>
+
+            <h3>
+                No completed works
+            </h3>
+
+            <p>
+                Your service requests and completed works
+                will appear here.
+            </p>
+
+            <button
+                id="emptyRequestButton"
+                class="primary-button"
+                type="button"
+            >
+                Request a Service
+            </button>
+
+        </div>
+    `;
+
+
+    const button =
+        $("emptyRequestButton");
+
+    if (button) {
+
+        button.addEventListener(
+            "click",
+            () => openServiceRequest()
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   WORKS HISTORY
+========================================================= */
+
+function renderWorksHistory(orders) {
+
+    const works =
+        $("worksContainer");
+
+    if (!works) return;
+
+
+    /*
+       If there is an active current order,
+       keep its realtime status UI.
+    */
+
+    if (currentOrderId) {
+
+        const active =
+            orders.find(
+                order =>
+                    order.id === currentOrderId &&
+                    [
+                        "searching",
+                        "accepted",
+                        "in_progress"
+                    ].includes(order.status)
+            );
+
+        if (active) {
+
+            renderOrderStatus(
+                active.id,
+                active
+            );
+
+            return;
+
+        }
+
+    }
 
 
     const completed =
-        requests.filter(
-            request =>
-                request.status === "completed"
+        orders.filter(order =>
+            [
+                "completed",
+                "customer_cancelled",
+                "worker_cancelled"
+            ].includes(order.status)
         );
 
 
-    if (completed.length === 0) {
+    if (!completed.length) {
 
-        container.innerHTML = `
+        if (!currentOrderId) {
 
-            <div class="empty-state">
+            showEmptyWorks();
 
-                <div class="empty-icon">
-                    📋
-                </div>
-
-                <h3>
-                    No completed works
-                </h3>
-
-                <p>
-                    Your completed service works will appear here.
-                </p>
-
-                <button
-                    class="primary-button"
-                    id="historyRequestButton"
-                    type="button"
-                >
-                    Request a Service
-                </button>
-
-            </div>
-
-        `;
-
-
-        $("historyRequestButton")
-            ?.addEventListener(
-                "click",
-                () => openServiceRequest("")
-            );
-
+        }
 
         return;
 
     }
 
 
-    container.innerHTML = "";
+    works.innerHTML = `
 
+        <div class="works-history">
 
-    completed.forEach(
-        request => {
+            ${completed.map(order => `
 
-            const card =
-                document.createElement(
-                    "article"
-                );
+                <div class="history-card">
 
-            card.className =
-                "work-card";
+                    <div class="history-top">
 
-
-            const date =
-                formatTimestamp(
-                    request.completedAt ||
-                    request.updatedAt ||
-                    request.createdAt
-                );
-
-
-            card.innerHTML = `
-
-                <div class="work-card-top">
-
-                    <div>
-
-                        <span class="work-service">
+                        <strong>
                             ${escapeHTML(
-                                request.service || "Service"
+                                order.service || "Service"
+                            )}
+                        </strong>
+
+                        <span class="history-status">
+                            ${formatStatus(
+                                order.status
                             )}
                         </span>
 
-                        <small>
-                            ${escapeHTML(date)}
-                        </small>
-
                     </div>
 
-                    <span class="status-badge completed">
-                        Completed
-                    </span>
-
-                </div>
-
-
-                <p>
-                    ${escapeHTML(
-                        request.description || ""
-                    )}
-                </p>
-
-
-                <div class="work-worker">
-
-                    <strong>
-                        Professional
-                    </strong>
-
-                    <span>
+                    <p>
                         ${escapeHTML(
-                            request.acceptedWorkerName ||
-                            "Professional"
+                            order.description || ""
                         )}
-                    </span>
+                    </p>
+
+                    <small>
+                        ${escapeHTML(
+                            order.address || ""
+                        )}
+                    </small>
+
+                    ${
+                        order.workerName
+                        ? `
+                        <div class="history-worker">
+                            Professional:
+                            ${escapeHTML(
+                                order.workerName
+                            )}
+                        </div>
+                        `
+                        : ""
+                    }
+
+                    ${
+                        order.id
+                        ? `
+                        <small>
+                            Order ID:
+                            ${escapeHTML(order.id)}
+                        </small>
+                        `
+                        : ""
+                    }
 
                 </div>
 
+            `).join("")}
 
-                <button
-                    class="secondary-button review-button"
-                    data-work-id="${request.id}"
-                    type="button"
-                >
-                    ⭐ Rate & Review
-                </button>
+        </div>
+    `;
 
-            `;
+}
 
 
-            container.appendChild(
-                card
-            );
+/* =========================================================
+   STATUS FORMAT
+========================================================= */
+
+function formatStatus(status) {
+
+    const statuses = {
+
+        completed: "Completed",
+
+        customer_cancelled:
+            "Cancelled by customer",
+
+        worker_cancelled:
+            "Professional cancelled",
+
+        accepted:
+            "Accepted",
+
+        in_progress:
+            "In Progress",
+
+        searching:
+            "Searching"
+
+    };
+
+    return statuses[status] || status;
+
+}
+
+
+/* =========================================================
+   AUTH MODAL
+========================================================= */
+
+function setupAuthButton() {
+
+    const button =
+        $("authButton");
+
+    if (!button) return;
+
+
+    button.addEventListener(
+        "click",
+        async () => {
+
+            if (currentUser) {
+
+                showAccountInfo();
+
+                return;
+
+            }
+
+            openModal("authModal");
 
         }
     );
 
+}
 
-    $$(".review-button").forEach(
-        button => {
+
+/* =========================================================
+   ACCOUNT INFO
+========================================================= */
+
+async function showAccountInfo() {
+
+    if (!currentUser) return;
+
+
+    try {
+
+        const customer =
+            await getDoc(
+                doc(
+                    db,
+                    "customers",
+                    currentUser.uid
+                )
+            );
+
+
+        const data =
+            customer.exists()
+                ? customer.data()
+                : {};
+
+
+        const name =
+            data.name || "Customer";
+
+
+        const email =
+            data.email || "Not added";
+
+
+        const phone =
+            data.phone || "Not added";
+
+
+        const logout =
+            confirm(
+                `FIX MY WORK Account\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nPress OK to logout.`
+            );
+
+
+        if (logout) {
+
+            await signOut(auth);
+
+            currentOrderId = null;
+
+            if (currentOrderUnsubscribe) {
+
+                currentOrderUnsubscribe();
+
+                currentOrderUnsubscribe = null;
+
+            }
+
+            showToast(
+                "You have been logged out.",
+                "success"
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+}
+
+
+/* =========================================================
+   AUTH FORM
+========================================================= */
+
+function setupAuthForm() {
+
+    const form =
+        $("authForm");
+
+    if (!form) return;
+
+
+    form.addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+            try {
+
+                await ensureAuthentication();
+
+                const email =
+                    $("authEmail")?.value.trim();
+
+
+                if (email) {
+
+                    await updateDoc(
+
+                        doc(
+                            db,
+                            "customers",
+                            currentUser.uid
+                        ),
+
+                        {
+
+                            email,
+
+                            updatedAt:
+                                serverTimestamp()
+
+                        }
+
+                    );
+
+                }
+
+
+                closeModal("authModal");
+
+                showToast(
+                    "You are connected to FIX MY WORK.",
+                    "success"
+                );
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                showToast(
+                    "Login failed. Please try again.",
+                    "error"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE MODALS
+========================================================= */
+
+function setupModalClosing() {
+
+    document
+        .querySelectorAll(
+            "[data-close-modal]"
+        )
+        .forEach(button => {
 
             button.addEventListener(
                 "click",
                 () => {
 
-                    showFeedbackModal(
-                        button.dataset.workId
+                    closeModal(
+                        button.dataset.closeModal
                     );
 
                 }
-            );
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// FEEDBACK MODAL
-// ============================================================
-
-function showFeedbackModal(
-    workId
-) {
-
-    $("feedbackWorkId")
-        .value =
-        workId;
-
-    $("selectedRating")
-        .value =
-        "";
-
-    $("feedbackText")
-        .value =
-        "";
-
-    selectedRating =
-        0;
-
-
-    $$("#ratingButtons button")
-        .forEach(button => {
-
-            button.classList.remove(
-                "selected"
             );
 
         });
 
 
-    openModal(
-        "feedbackModal"
+    document
+        .querySelectorAll(".modal")
+        .forEach(modal => {
+
+            modal.addEventListener(
+                "click",
+                event => {
+
+                    if (
+                        event.target === modal
+                    ) {
+
+                        modal.classList.add(
+                            "hidden"
+                        );
+
+                    }
+
+                }
+            );
+
+        });
+
+}
+
+
+/* =========================================================
+   REQUEST BUTTONS
+========================================================= */
+
+function setupRequestButtons() {
+
+    const request =
+        $("requestServiceButton");
+
+    if (request) {
+
+        request.addEventListener(
+            "click",
+            () => openServiceRequest()
+        );
+
+    }
+
+
+    const emptyRequest =
+        $("emptyRequestButton");
+
+    if (emptyRequest) {
+
+        emptyRequest.addEventListener(
+            "click",
+            () => openServiceRequest()
+        );
+
+    }
+
+
+    const viewAllServices =
+        $("viewAllServices");
+
+    if (viewAllServices) {
+
+        viewAllServices.addEventListener(
+            "click",
+            () => {
+
+                const section =
+                    $("services");
+
+                section?.scrollIntoView({
+                    behavior: "smooth"
+                });
+
+            }
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LOCATION BUTTONS
+========================================================= */
+
+function setupLocationButtons() {
+
+    const locationButton =
+        $("locationButton");
+
+    if (locationButton) {
+
+        locationButton.addEventListener(
+            "click",
+            getCurrentLocation
+        );
+
+    }
+
+
+    const useLocationButton =
+        $("useLocationButton");
+
+    if (useLocationButton) {
+
+        useLocationButton.addEventListener(
+            "click",
+            getCurrentLocation
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   SAFETY NOTICE
+========================================================= */
+
+function setupSafetyNotice() {
+
+    const close =
+        $("closeSafety");
+
+    const notice =
+        $("safetyNotice");
+
+    if (
+        close &&
+        notice
+    ) {
+
+        close.addEventListener(
+            "click",
+            () => {
+
+                notice.style.display =
+                    "none";
+
+            }
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   SUPPORT
+========================================================= */
+
+function setupSupport() {
+
+    const support =
+        $("supportButton");
+
+    if (!support) return;
+
+    support.addEventListener(
+        "click",
+        () => {
+
+            window.location.href =
+                "mailto:fixmywork6734@gmail.com";
+
+        }
     );
 
 }
 
 
-// ============================================================
-// RATING
-// ============================================================
+/* =========================================================
+   MENU
+========================================================= */
 
-$$("#ratingButtons button")
-    .forEach(button => {
+function setupMenu() {
 
-        button.addEventListener(
-            "click",
+    const menu =
+        $("menuButton");
+
+    const nav =
+        document.querySelector(".desktop-nav");
+
+    if (!menu || !nav) return;
+
+    menu.addEventListener(
+        "click",
+        () => {
+
+            const open =
+                menu.getAttribute(
+                    "aria-expanded"
+                ) === "true";
+
+            menu.setAttribute(
+                "aria-expanded",
+                String(!open)
+            );
+
+            nav.classList.toggle(
+                "mobile-nav-open"
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SERVICE FORM
+========================================================= */
+
+function setupServiceForm() {
+
+    const form =
+        $("serviceForm");
+
+    if (!form) return;
+
+    form.addEventListener(
+        "submit",
+        createServiceRequest
+    );
+
+
+    const select =
+        $("serviceSelect");
+
+    if (select) {
+
+        select.addEventListener(
+            "change",
             () => {
 
-                selectedRating =
-                    Number(
-                        button.dataset.rating
-                    );
+                selectedService =
+                    select.value;
 
-                $("selectedRating")
-                    .value =
-                    selectedRating;
+                const text =
+                    $("selectedServiceText");
 
+                if (text) {
 
-                $$("#ratingButtons button")
-                    .forEach(
-                        ratingButton => {
+                    text.textContent =
+                        selectedService
 
-                            ratingButton.classList.toggle(
-                                "selected",
-                                Number(
-                                    ratingButton.dataset.rating
-                                ) <= selectedRating
-                            );
+                        ? `Requesting ${selectedService}. Tell us what needs to be fixed.`
 
-                        }
-                    );
-
-            }
-        );
-
-    });
-
-
-// ============================================================
-// FEEDBACK FORM
-// ============================================================
-
-$("feedbackForm")?.addEventListener(
-    "submit",
-    async event => {
-
-        event.preventDefault();
-
-
-        if (!currentUser) {
-
-            showToast(
-                "Please login first.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        const workId =
-            $("feedbackWorkId")
-                .value;
-
-        const rating =
-            Number(
-                $("selectedRating")
-                    .value
-            );
-
-        const feedback =
-            $("feedbackText")
-                .value
-                .trim();
-
-        const files =
-            [...(
-                $("completionPhoto")
-                    .files || []
-            )];
-
-
-        if (!rating) {
-
-            showToast(
-                "Please select a rating.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        if (!feedback) {
-
-            showToast(
-                "Please enter your feedback.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        try {
-
-            const photoURLs = [];
-
-
-            for (
-                const file
-                of files
-            ) {
-
-                validateImage(file);
-
-                const photoRef =
-                    ref(
-                        storage,
-                        `feedback/${currentUser.uid}/${workId}/${Date.now()}_${file.name}`
-                    );
-
-
-                await uploadBytes(
-                    photoRef,
-                    file
-                );
-
-
-                const url =
-                    await getDownloadURL(
-                        photoRef
-                    );
-
-
-                photoURLs.push(url);
-
-            }
-
-
-            const reviewData = {
-
-                customerId:
-                    currentUser.uid,
-
-                workId:
-                    workId,
-
-                rating:
-                    rating,
-
-                feedback:
-                    feedback,
-
-                photos:
-                    photoURLs,
-
-                createdAt:
-                    serverTimestamp()
-
-            };
-
-
-            await addDoc(
-                collection(
-                    db,
-                    "reviews"
-                ),
-                reviewData
-            );
-
-
-            await updateDoc(
-                doc(
-                    db,
-                    "serviceRequests",
-                    workId
-                ),
-                {
-
-                    customerReviewed:
-                        true,
-
-                    customerRating:
-                        rating,
-
-                    customerFeedback:
-                        feedback,
-
-                    reviewPhotos:
-                        photoURLs,
-
-                    updatedAt:
-                        serverTimestamp()
+                        : "Tell us what you need.";
 
                 }
-            );
-
-
-            closeModal(
-                "feedbackModal"
-            );
-
-
-            $("feedbackForm")
-                .reset();
-
-
-            $("completionPhotoPreview")
-                .innerHTML =
-                "";
-
-
-            showToast(
-                "Thank you for your review.",
-                "success"
-            );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            showToast(
-                "Unable to submit your review.",
-                "error"
-            );
-
-        }
-
-    }
-);
-
-
-// ============================================================
-// SUPPORT
-// ============================================================
-
-$("supportButton")?.addEventListener(
-    "click",
-    () => {
-
-        window.location.href =
-            "mailto:fixmywork6734@gmail.com?subject=FIX MY WORK Support";
-
-    }
-);
-
-
-// ============================================================
-// TERMS
-// ============================================================
-
-$("termsButton")?.addEventListener(
-    "click",
-    () => {
-
-        openModal(
-            "termsModal"
-        );
-
-    }
-);
-
-
-// ============================================================
-// PRIVACY
-// ============================================================
-
-$("privacyButton")?.addEventListener(
-    "click",
-    () => {
-
-        openModal(
-            "privacyModal"
-        );
-
-    }
-);
-
-
-// ============================================================
-// SAFETY
-// ============================================================
-
-$("safetyButton")?.addEventListener(
-    "click",
-    () => {
-
-        openModal(
-            "safetyModal"
-        );
-
-    }
-);
-
-
-// ============================================================
-// MENU
-// ============================================================
-
-$("menuButton")?.addEventListener(
-    "click",
-    () => {
-
-        const navigation =
-            $("mainNavigation");
-
-        if (!navigation) return;
-
-
-        const isOpen =
-            navigation.classList.toggle(
-                "mobile-open"
-            );
-
-
-        $("menuButton")
-            .setAttribute(
-                "aria-expanded",
-                String(isOpen)
-            );
-
-    }
-);
-
-
-// ============================================================
-// CLOSE MENU AFTER LINK
-// ============================================================
-
-$$(".desktop-nav a").forEach(
-    link => {
-
-        link.addEventListener(
-            "click",
-            () => {
-
-                $("mainNavigation")
-                    ?.classList.remove(
-                        "mobile-open"
-                    );
-
-                $("menuButton")
-                    ?.setAttribute(
-                        "aria-expanded",
-                        "false"
-                    );
 
             }
         );
 
     }
-);
+
+}
 
 
-// ============================================================
-// INSTALL APP
-// ============================================================
+/* =========================================================
+   YEAR
+========================================================= */
 
-window.addEventListener(
-    "beforeinstallprompt",
-    event => {
+function setCurrentYear() {
 
-        event.preventDefault();
+    const year =
+        $("currentYear");
 
-        deferredInstallPrompt =
-            event;
+    if (year) {
 
-        $("installButton")
-            ?.classList.remove(
-                "hidden"
-            );
+        year.textContent =
+            new Date().getFullYear();
 
     }
-);
+
+}
 
 
-$("installButton")?.addEventListener(
-    "click",
-    async () => {
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
 
-        if (!deferredInstallPrompt) {
+function escapeHTML(value) {
 
-            showToast(
-                "Use your browser menu and choose Install App.",
-                "info"
-            );
+    if (value === null ||
+        value === undefined) {
 
-            return;
+        return "";
+
+    }
+
+    return String(value)
+
+        .replaceAll("&", "&amp;")
+
+        .replaceAll("<", "&lt;")
+
+        .replaceAll(">", "&gt;")
+
+        .replaceAll('"', "&quot;")
+
+        .replaceAll("'", "&#039;");
+
+}
+
+
+/* =========================================================
+   CLEANUP ON PAGE HIDE
+========================================================= */
+
+window.addEventListener(
+    "pagehide",
+    () => {
+
+        if (currentOrderUnsubscribe) {
+
+            currentOrderUnsubscribe();
+
+            currentOrderUnsubscribe = null;
 
         }
 
+        if (currentHistoryUnsubscribe) {
 
-        deferredInstallPrompt.prompt();
+            currentHistoryUnsubscribe();
 
-        await deferredInstallPrompt.userChoice;
+            currentHistoryUnsubscribe = null;
 
-        deferredInstallPrompt =
-            null;
-
-        $("installButton")
-            ?.classList.add(
-                "hidden"
-            );
+        }
 
     }
 );
 
 
-// ============================================================
-// INSTALLED EVENT
-// ============================================================
+/* =========================================================
+   APPLICATION START
+========================================================= */
 
-window.addEventListener(
-    "appinstalled",
-    () => {
+async function initializeApplication() {
 
-        $("installButton")
-            ?.classList.add(
-                "hidden"
-            );
-
-        showToast(
-            "FIX MY WORK installed successfully.",
-            "success"
-        );
-
-    }
-);
+    console.log(
+        "FIX MY WORK customer application starting..."
+    );
 
 
-// ============================================================
-// FORMAT TIMESTAMP
-// ============================================================
+    populateServices();
 
-function formatTimestamp(
-    timestamp
-) {
+    setupServiceCards();
 
-    if (!timestamp) {
+    setupPhotoUpload();
 
-        return "Recently";
+    setupServiceForm();
 
-    }
+    setupAuthButton();
+
+    setupAuthForm();
+
+    setupModalClosing();
+
+    setupRequestButtons();
+
+    setupLocationButtons();
+
+    setupSafetyNotice();
+
+    setupSupport();
+
+    setupMenu();
+
+    initializeMapUI();
+
+    setCurrentYear();
 
 
     try {
 
-        const date =
-            timestamp.toDate
-                ? timestamp.toDate()
-                : new Date(timestamp);
-
-
-        return date.toLocaleString(
-            "en-IN",
-            {
-
-                day:
-                    "2-digit",
-
-                month:
-                    "short",
-
-                year:
-                    "numeric",
-
-                hour:
-                    "2-digit",
-
-                minute:
-                    "2-digit"
-
-            }
-        );
-
-    } catch {
-
-        return "Recently";
-
-    }
-
-}
-
-
-// ============================================================
-// ESCAPE HTML
-// ============================================================
-
-function escapeHTML(value) {
-
-    return String(value ?? "")
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-// ============================================================
-// KEYBOARD ESCAPE
-// ============================================================
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (event.key !== "Escape") return;
-
-
-        document
-            .querySelectorAll(
-                ".modal:not(.hidden)"
-            )
-            .forEach(
-                modal => {
-
-                    closeModal(
-                        modal.id
-                    );
-
-                }
-            );
-
-    }
-);
-
-
-// ============================================================
-// INITIAL PAGE SETUP
-// ============================================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        updateAuthModal();
+        await ensureAuthentication();
 
         console.log(
-            "FIX MY WORK Customer App loaded."
+            "FIX MY WORK customer backend connected."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Application initialization error:",
+            error
         );
 
     }
-);
+
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+initializeApplication();
