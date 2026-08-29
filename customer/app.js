@@ -1,52 +1,80 @@
-/* =========================================================
-   FIX MY WORK
-   CUSTOMER APP
-   Fresh production-structure version
-   ========================================================= */
+// ============================================================
+// FIX MY WORK — CUSTOMER APP
+// customer/app.js
+// ============================================================
 
-import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
     getAuth,
-    onAuthStateChanged,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
-    sendPasswordResetEmail,
-    updateProfile,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    signOut,
+    onAuthStateChanged,
+    updateProfile
+} from
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
     getFirestore,
     collection,
     addDoc,
     doc,
-    getDoc,
     setDoc,
+    getDoc,
     updateDoc,
     query,
     where,
+    orderBy,
     onSnapshot,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    serverTimestamp,
+    arrayUnion
+} from
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL
+} from
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 
-/* =========================================================
-   FIREBASE
-   ========================================================= */
+// ============================================================
+// FIREBASE CONFIG
+// ============================================================
+//
+// IMPORTANT:
+// Replace ONLY these values with your Firebase project values.
+// ============================================================
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCP8DGLQMXPUsv_p2zQ-NLkziwPQe1XkgU",
-    authDomain: "fixmywork-d83ba.firebaseapp.com",
-    databaseURL: "https://fixmywork-d83ba-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "fixmywork-d83ba",
-    storageBucket: "fixmywork-d83ba.firebasestorage.app",
-    messagingSenderId: "207313302232",
-    appId: "1:207313302232:web:73055348982ad84abeddad",
-    measurementId: "G-11FQMLCBQY"
+
+    apiKey: "YOUR_API_KEY",
+
+    authDomain:
+        "YOUR_PROJECT.firebaseapp.com",
+
+    projectId:
+        "YOUR_PROJECT_ID",
+
+    storageBucket:
+        "YOUR_PROJECT.firebasestorage.app",
+
+    messagingSenderId:
+        "YOUR_MESSAGING_SENDER_ID",
+
+    appId:
+        "YOUR_APP_ID"
+
 };
+
+
+// ============================================================
+// INITIALIZE FIREBASE
+// ============================================================
 
 const app = initializeApp(firebaseConfig);
 
@@ -54,291 +82,135 @@ const auth = getAuth(app);
 
 const db = getFirestore(app);
 
-
-/* =========================================================
-   CLOUDINARY
-   ========================================================= */
-
-const CLOUDINARY_CLOUD_NAME = "lqfozcs3";
-
-const CLOUDINARY_UPLOAD_PRESET = "fixmywork_upload";
+const storage = getStorage(app);
 
 
-/* =========================================================
-   EXACTLY 100 SERVICES
-   ========================================================= */
-
-const SERVICES = [
-    "Electrical",
-    "Plumbing",
-    "AC Repair",
-    "RO Repair",
-    "Washing Machine Repair",
-    "Refrigerator Repair",
-    "TV Repair",
-    "Microwave Repair",
-    "Geyser Repair",
-    "Dishwasher Repair",
-    "Chimney Repair",
-    "Water Purifier Installation",
-    "Water Purifier Service",
-    "Water Tank Cleaning",
-    "Bathroom Cleaning",
-    "Home Deep Cleaning",
-    "Sofa Cleaning",
-    "Carpet Cleaning",
-    "Kitchen Cleaning",
-    "Pest Control",
-    "Termite Control",
-    "Carpenter",
-    "Furniture Repair",
-    "Furniture Assembly",
-    "Modular Kitchen Repair",
-    "Door Repair",
-    "Window Repair",
-    "Lock Repair",
-    "Locksmith",
-    "Painting",
-    "Wall Painting",
-    "Texture Painting",
-    "Waterproofing",
-    "False Ceiling",
-    "POP Work",
-    "Tile Work",
-    "Marble Work",
-    "Granite Work",
-    "Glass Work",
-    "Aluminium Work",
-    "Welding",
-    "Masonry",
-    "Brick Work",
-    "Plastering",
-    "Roofing",
-    "Electrical Wiring",
-    "Switchboard Repair",
-    "Fan Repair",
-    "Light Installation",
-    "Inverter Repair",
-    "Battery Service",
-    "Solar Panel Service",
-    "Solar Water Heater Service",
-    "CCTV Installation",
-    "CCTV Repair",
-    "Wi-Fi Installation",
-    "Internet Troubleshooting",
-    "DTH Service",
-    "Computer Repair",
-    "Laptop Repair",
-    "Printer Repair",
-    "Mobile Repair",
-    "Tablet Repair",
-    "Data Recovery",
-    "UPS Repair",
-    "Generator Service",
-    "AC Installation",
-    "AC Gas Filling",
-    "AC Maintenance",
-    "AC Cleaning",
-    "Bike Repair",
-    "Car Repair",
-    "Car Wash",
-    "Car AC Repair",
-    "Tyre Service",
-    "Battery Replacement",
-    "Car Towing",
-    "Bike Towing",
-    "Packers & Movers",
-    "Furniture Shifting",
-    "Gardening",
-    "Lawn Maintenance",
-    "Plant Care",
-    "Water Pump Repair",
-    "Borewell Motor Repair",
-    "Plumbing Installation",
-    "Drain Cleaning",
-    "Kitchen Plumbing",
-    "Bathroom Plumbing",
-    "Bathroom Fitting",
-    "Gas Stove Repair",
-    "Gas Pipeline Service",
-    "RO AMC Service",
-    "Home Appliance Installation",
-    "Smart TV Installation",
-    "Home Theatre Installation",
-    "Intercom Installation",
-    "Security Alarm Installation",
-    "Solar Inverter Service",
-    "Home Maintenance Inspection"
-];
-
-if (SERVICES.length !== 100) {
-    throw new Error(
-        `FIX MY WORK service catalogue must contain exactly 100 services. Found ${SERVICES.length}.`
-    );
-}
-
-
-/* =========================================================
-   STATE
-   ========================================================= */
+// ============================================================
+// GLOBAL STATE
+// ============================================================
 
 let currentUser = null;
 
-let customerProfile = null;
+let currentCustomer = null;
 
-let isSignupMode = false;
+let selectedService = "";
 
-let currentRequestUnsubscribe = null;
-
-let worksUnsubscribe = null;
+let selectedRating = 0;
 
 let currentRequestId = null;
 
-let currentLocation = {
-    latitude: null,
-    longitude: null,
-    address: ""
-};
+let currentWorker = null;
+
+let deferredInstallPrompt = null;
+
+let unsubscribeCustomerRequests = null;
 
 
-/* =========================================================
-   DOM
-   ========================================================= */
+// ============================================================
+// DOM HELPERS
+// ============================================================
 
 const $ = (id) => document.getElementById(id);
 
-const authModal = $("authModal");
-
-const serviceModal = $("serviceModal");
-
-const policyModal = $("policyModal");
-
-const authForm = $("authForm");
-
-const serviceForm = $("serviceForm");
-
-const serviceGrid = $("serviceGrid");
-
-const serviceSelect = $("serviceSelect");
-
-const activeRequestSection = $("activeRequestSection");
-
-const activeRequestContainer = $("activeRequestContainer");
-
-const worksContainer = $("worksContainer");
-
-const toastContainer = $("toastContainer");
+const $$ = (selector) =>
+    document.querySelectorAll(selector);
 
 
-/* =========================================================
-   UTILITIES
-   ========================================================= */
+// ============================================================
+// YEAR
+// ============================================================
 
-function showToast(message, type = "normal") {
+if ($("currentYear")) {
 
-    if (!toastContainer) {
-        alert(message);
-        return;
-    }
+    $("currentYear").textContent =
+        new Date().getFullYear();
 
-    const toast = document.createElement("div");
+}
 
-    toast.className = `toast ${type}`;
 
-    toast.textContent = message;
+// ============================================================
+// TOAST
+// ============================================================
 
-    toastContainer.appendChild(toast);
+function showToast(message, type = "info") {
+
+    const container =
+        $("toastContainer");
+
+    if (!container) return;
+
+    const toast =
+        document.createElement("div");
+
+    toast.className =
+        `toast toast-${type}`;
+
+    toast.textContent =
+        message;
+
+    container.appendChild(toast);
 
     setTimeout(() => {
-        toast.remove();
-    }, 4000);
+
+        toast.classList.add("show");
+
+    }, 10);
+
+    setTimeout(() => {
+
+        toast.classList.remove("show");
+
+        setTimeout(() => {
+
+            toast.remove();
+
+        }, 300);
+
+    }, 3500);
 }
 
 
-function escapeHTML(value) {
+// ============================================================
+// MODAL
+// ============================================================
 
-    const div = document.createElement("div");
+function openModal(id) {
 
-    div.textContent = value ?? "";
+    const modal = $(id);
 
-    return div.innerHTML;
+    if (!modal) return;
+
+    modal.classList.remove("hidden");
+
+    document.body.classList.add("modal-open");
 }
 
 
-function validMobile(value) {
+function closeModal(id) {
 
-    return /^[6-9]\d{9}$/.test(
-        String(value || "").trim()
-    );
-}
+    const modal = $(id);
 
+    if (!modal) return;
 
-function formatDate(timestamp) {
+    modal.classList.add("hidden");
 
-    if (!timestamp) {
-        return "Recently";
+    const anyOpen =
+        document.querySelector(".modal:not(.hidden)");
+
+    if (!anyOpen) {
+
+        document.body.classList.remove("modal-open");
+
     }
-
-    try {
-
-        const date = timestamp.toDate
-            ? timestamp.toDate()
-            : new Date(timestamp);
-
-        return date.toLocaleString(
-            "en-IN",
-            {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-            }
-        );
-
-    } catch {
-
-        return "Recently";
-    }
 }
 
 
-function openModal(modal) {
-
-    modal?.classList.remove("hidden");
-
-    document.body.style.overflow = "hidden";
-}
-
-
-function closeModal(modal) {
-
-    modal?.classList.add("hidden");
-
-    document.body.style.overflow = "";
-}
-
-
-function closeAllModals() {
-
-    closeModal(authModal);
-
-    closeModal(serviceModal);
-
-    closeModal(policyModal);
-}
-
-
-/* =========================================================
-   MODALS
-   ========================================================= */
-
-document.querySelectorAll("[data-close]").forEach((button) => {
+$$("[data-close-modal]").forEach(button => {
 
     button.addEventListener("click", () => {
 
         closeModal(
-            $(button.dataset.close)
+            button.dataset.closeModal
         );
 
     });
@@ -346,12 +218,14 @@ document.querySelectorAll("[data-close]").forEach((button) => {
 });
 
 
-document.querySelectorAll(".modal").forEach((modal) => {
+$$(".modal").forEach(modal => {
 
-    modal.addEventListener("click", (event) => {
+    modal.addEventListener("click", event => {
 
         if (event.target === modal) {
-            closeModal(modal);
+
+            closeModal(modal.id);
+
         }
 
     });
@@ -359,440 +233,173 @@ document.querySelectorAll(".modal").forEach((modal) => {
 });
 
 
-document.addEventListener("keydown", (event) => {
+// ============================================================
+// AUTH MODE
+// ============================================================
 
-    if (event.key === "Escape") {
-        closeAllModals();
+let authMode = "login";
+
+
+// ============================================================
+// AUTH BUTTON
+// ============================================================
+
+$("authButton")?.addEventListener("click", () => {
+
+    if (currentUser) {
+
+        loadCustomerProfileIntoForm();
+
+        openModal("profileModal");
+
+    } else {
+
+        authMode = "login";
+
+        updateAuthModal();
+
+        openModal("authModal");
+
     }
 
 });
 
 
-/* =========================================================
-   SERVICES
-   ========================================================= */
+// ============================================================
+// UPDATE AUTH MODAL
+// ============================================================
 
-function buildServices() {
+function updateAuthModal() {
 
-    if (!serviceGrid || !serviceSelect) {
-        return;
-    }
+    if (authMode === "register") {
 
-    serviceGrid.innerHTML = "";
+        $("authTitle").textContent =
+            "Create your account";
 
-    serviceSelect.innerHTML = `
-        <option value="">
-            Select one of 100 services
-        </option>
-    `;
+        $("authDescription").textContent =
+            "Create a customer account using your email and password.";
 
-    SERVICES.forEach((service, index) => {
-
-        const card = document.createElement("button");
-
-        card.type = "button";
-
-        card.className = "service-card";
-
-        card.dataset.service = service;
-
-        card.innerHTML = `
-            <span class="service-icon">
-                ${getServiceIcon(service)}
-            </span>
-
-            <strong>
-                ${escapeHTML(service)}
-            </strong>
-
-            <small>
-                Professional service
-            </small>
-        `;
-
-        card.addEventListener("click", () => {
-
-            if (!currentUser) {
-                openLogin();
-                showToast(
-                    "Please login before booking a service.",
-                    "error"
-                );
-                return;
-            }
-
-            openServiceModal(service);
-
-        });
-
-        serviceGrid.appendChild(card);
-
-
-        const option = document.createElement("option");
-
-        option.value = service;
-
-        option.textContent = `${index + 1}. ${service}`;
-
-        serviceSelect.appendChild(option);
-
-    });
-
-    const serviceCount = $("serviceCount");
-
-    if (serviceCount) {
-        serviceCount.textContent =
-            `${SERVICES.length} services`;
-    }
-}
-
-
-function getServiceIcon(service) {
-
-    const icons = {
-
-        "Electrical": "⚡",
-        "Plumbing": "🔧",
-        "AC Repair": "❄️",
-        "RO Repair": "💧",
-        "Washing Machine Repair": "🧺",
-        "Refrigerator Repair": "🧊",
-        "TV Repair": "📺",
-        "Microwave Repair": "🍽️",
-        "Geyser Repair": "🚿",
-        "Dishwasher Repair": "🍽️",
-        "Carpenter": "🪚",
-        "Painting": "🎨",
-        "Pest Control": "🐜",
-        "Gardening": "🌱",
-        "CCTV Installation": "📷",
-        "Computer Repair": "💻",
-        "Laptop Repair": "💻",
-        "Mobile Repair": "📱",
-        "Car Repair": "🚗",
-        "Bike Repair": "🏍️",
-        "Car Wash": "🚿",
-        "Packers & Movers": "📦",
-        "Home Deep Cleaning": "🧹",
-        "Waterproofing": "🏠",
-        "Welding": "🧰"
-    };
-
-    return icons[service] || "🛠️";
-}
-
-
-/* =========================================================
-   AUTH UI
-   ========================================================= */
-
-function openLogin() {
-
-    isSignupMode = false;
-
-    updateAuthUI();
-
-    openModal(authModal);
-}
-
-
-function openSignup() {
-
-    isSignupMode = true;
-
-    updateAuthUI();
-
-    openModal(authModal);
-}
-
-
-function updateAuthUI() {
-
-    const title = $("authTitle");
-
-    const subtitle = $("authSubtitle");
-
-    const submit = $("authSubmit");
-
-    const modeButton = $("authModeButton");
-
-    const profileGroup = $("profilePhotoGroup");
-
-    const name = $("authName");
-
-    const mobile = $("authMobile");
-
-    if (isSignupMode) {
-
-        title.textContent =
-            "Create Customer Account";
-
-        subtitle.textContent =
-            "Create your FIX MY WORK customer account.";
-
-        submit.textContent =
+        $("authForm")
+            .querySelector("button[type='submit']")
+            .textContent =
             "Create Account";
 
-        modeButton.textContent =
+        $("createAccountButton").textContent =
             "Already have an account? Login";
 
-        profileGroup?.classList.remove("hidden");
-
-        if (name) {
-            name.required = true;
-        }
-
-        if (mobile) {
-            mobile.required = true;
-        }
-
     } else {
 
-        title.textContent =
+        $("authTitle").textContent =
+            "Login to FIX MY WORK";
+
+        $("authDescription").textContent =
+            "Login with your email address and password.";
+
+        $("authForm")
+            .querySelector("button[type='submit']")
+            .textContent =
             "Login";
 
-        subtitle.textContent =
-            "Login to book and track services.";
+        $("createAccountButton").textContent =
+            "Create new account";
 
-        submit.textContent =
-            "Login";
-
-        modeButton.textContent =
-            "Create a new account";
-
-        profileGroup?.classList.add("hidden");
-
-        if (name) {
-            name.required = false;
-        }
-
-        if (mobile) {
-            mobile.required = false;
-        }
     }
+
 }
 
 
-/* =========================================================
-   AUTH BUTTON
-   ========================================================= */
+// ============================================================
+// SWITCH LOGIN / REGISTER
+// ============================================================
 
-$("authButton")?.addEventListener(
+$("createAccountButton")?.addEventListener(
     "click",
     () => {
 
-        if (currentUser) {
+        authMode =
+            authMode === "login"
+                ? "register"
+                : "login";
 
-            showAccountMenu();
-
-        } else {
-
-            openLogin();
-
-        }
+        updateAuthModal();
 
     }
 );
 
 
-$("authModeButton")?.addEventListener(
-    "click",
-    () => {
+// ============================================================
+// AUTH FORM
+// ============================================================
 
-        isSignupMode = !isSignupMode;
-
-        updateAuthUI();
-
-    }
-);
-
-
-/* =========================================================
-   ACCOUNT MENU
-   ========================================================= */
-
-function showAccountMenu() {
-
-    const name =
-        customerProfile?.name ||
-        currentUser?.email ||
-        "Customer";
-
-    const choice =
-        window.confirm(
-            `${name}\n\nOK = My Profile\nCancel = Logout`
-        );
-
-    if (choice) {
-
-        openSignup();
-
-        const authName = $("authName");
-
-        const authMobile = $("authMobile");
-
-        const authEmail = $("authEmail");
-
-        if (authName) {
-            authName.value =
-                customerProfile?.name || "";
-        }
-
-        if (authMobile) {
-            authMobile.value =
-                customerProfile?.mobile || "";
-        }
-
-        if (authEmail) {
-            authEmail.value =
-                currentUser.email || "";
-            authEmail.disabled = true;
-        }
-
-        showToast(
-            "Your profile details are shown here."
-        );
-
-    } else {
-
-        signOut(auth)
-            .catch((error) => {
-                console.error(error);
-            });
-
-    }
-}
-
-
-/* =========================================================
-   LOGIN / SIGNUP
-   ========================================================= */
-
-authForm?.addEventListener(
+$("authForm")?.addEventListener(
     "submit",
-    async (event) => {
+    async event => {
 
         event.preventDefault();
 
         const email =
-            $("authEmail")?.value
-                .trim()
-                .toLowerCase();
+            $("authEmail").value.trim();
 
         const password =
-            $("authPassword")?.value || "";
+            $("authPassword").value;
 
         if (!email || !password) {
 
             showToast(
-                "Email and password are required.",
+                "Please enter email and password.",
                 "error"
             );
 
             return;
+
         }
-
-
-        const button = $("authSubmit");
-
-        if (button) {
-            button.disabled = true;
-            button.textContent =
-                isSignupMode
-                    ? "Creating account..."
-                    : "Logging in...";
-        }
-
 
         try {
 
-            if (isSignupMode) {
+            if (authMode === "register") {
 
-                const name =
-                    $("authName")?.value.trim();
-
-                const mobile =
-                    $("authMobile")?.value.trim();
-
-                if (!name) {
-                    throw new Error(
-                        "Please enter your full name."
-                    );
-                }
-
-                if (!validMobile(mobile)) {
-                    throw new Error(
-                        "Please enter a valid 10 digit mobile number."
-                    );
-                }
-
-
-                const credential =
+                const result =
                     await createUserWithEmailAndPassword(
                         auth,
                         email,
                         password
                     );
 
-
-                await updateProfile(
-                    credential.user,
-                    {
-                        displayName: name
-                    }
-                );
-
-
-                let profilePhoto = "";
-
-                const photoFile =
-                    $("authPhoto")?.files?.[0];
-
-                if (photoFile) {
-
-                    const uploaded =
-                        await uploadImageToCloudinary(
-                            photoFile
-                        );
-
-                    profilePhoto =
-                        uploaded.url;
-
-                    await updateProfile(
-                        credential.user,
-                        {
-                            photoURL: profilePhoto
-                        }
-                    );
-                }
-
-
                 await setDoc(
                     doc(
                         db,
                         "customers",
-                        credential.user.uid
+                        result.user.uid
                     ),
                     {
-                        uid: credential.user.uid,
-                        role: "customer",
-                        name,
-                        email,
-                        mobile,
-                        profilePhoto,
+
+                        uid:
+                            result.user.uid,
+
+                        email:
+                            email,
+
+                        name:
+                            "",
+
+                        phone:
+                            "",
+
+                        photoURL:
+                            "",
+
                         createdAt:
                             serverTimestamp(),
+
                         updatedAt:
                             serverTimestamp()
+
                     },
-                    {
-                        merge: true
-                    }
+                    { merge: true }
                 );
 
-
                 showToast(
-                    "Customer account created successfully.",
+                    "Account created successfully.",
                     "success"
                 );
 
@@ -808,78 +415,12 @@ authForm?.addEventListener(
                     "Login successful.",
                     "success"
                 );
-            }
-
-
-            closeModal(authModal);
-
-            authForm.reset();
-
-        } catch (error) {
-
-            console.error(
-                "Authentication error:",
-                error
-            );
-
-            showToast(
-                getFirebaseErrorMessage(error),
-                "error"
-            );
-
-        } finally {
-
-            if (button) {
-
-                button.disabled = false;
-
-                button.textContent =
-                    isSignupMode
-                        ? "Create Account"
-                        : "Login";
 
             }
 
-        }
+            $("authForm").reset();
 
-    }
-);
-
-
-/* =========================================================
-   PASSWORD RESET
-   ========================================================= */
-
-$("forgotPasswordButton")?.addEventListener(
-    "click",
-    async () => {
-
-        const email =
-            $("authEmail")?.value
-                .trim()
-                .toLowerCase();
-
-        if (!email) {
-
-            showToast(
-                "Enter your email first.",
-                "error"
-            );
-
-            return;
-        }
-
-        try {
-
-            await sendPasswordResetEmail(
-                auth,
-                email
-            );
-
-            showToast(
-                "Password reset email sent.",
-                "success"
-            );
+            closeModal("authModal");
 
         } catch (error) {
 
@@ -896,236 +437,280 @@ $("forgotPasswordButton")?.addEventListener(
 );
 
 
-/* =========================================================
-   FIREBASE ERROR MESSAGES
-   ========================================================= */
+// ============================================================
+// FIREBASE ERROR MESSAGE
+// ============================================================
 
 function getFirebaseErrorMessage(error) {
 
-    const code = error?.code || "";
+    const code =
+        error?.code || "";
 
-    const messages = {
+    switch (code) {
 
-        "auth/email-already-in-use":
-            "This email already has an account.",
+        case "auth/invalid-email":
+            return "Please enter a valid email address.";
 
-        "auth/invalid-email":
-            "Please enter a valid email address.",
+        case "auth/email-already-in-use":
+            return "This email is already registered.";
 
-        "auth/weak-password":
-            "Password must be at least 6 characters.",
+        case "auth/weak-password":
+            return "Password must be at least 6 characters.";
 
-        "auth/invalid-credential":
-            "Incorrect email or password.",
+        case "auth/invalid-credential":
+            return "Incorrect email or password.";
 
-        "auth/user-not-found":
-            "Account not found.",
+        case "auth/user-not-found":
+            return "Account not found.";
 
-        "auth/wrong-password":
-            "Incorrect email or password.",
+        case "auth/wrong-password":
+            return "Incorrect password.";
 
-        "auth/too-many-requests":
-            "Too many attempts. Please try again later.",
+        case "auth/too-many-requests":
+            return "Too many attempts. Please try again later.";
 
-        "auth/network-request-failed":
-            "Network problem. Check your internet connection."
+        default:
+            return error?.message ||
+                "Something went wrong. Please try again.";
 
-    };
+    }
 
-    return messages[code] ||
-        error?.message ||
-        "Something went wrong. Please try again.";
 }
 
 
-/* =========================================================
-   AUTH STATE
-   ========================================================= */
+// ============================================================
+// AUTH STATE
+// ============================================================
 
 onAuthStateChanged(
     auth,
-    async (user) => {
+    async user => {
 
         currentUser = user;
 
-        if (!user) {
+        if (user) {
 
-            customerProfile = null;
+            await loadCustomer();
 
-            $("authButton").textContent =
-                "Login";
+            updateLoggedInUI();
 
-            stopCustomerListeners();
+            subscribeToCustomerRequests();
 
-            renderCompletedWorks([]);
+        } else {
 
-            return;
+            currentCustomer = null;
+
+            updateLoggedOutUI();
+
+            if (unsubscribeCustomerRequests) {
+
+                unsubscribeCustomerRequests();
+
+                unsubscribeCustomerRequests = null;
+
+            }
+
         }
-
-
-        $("authButton").textContent =
-            "My Account";
-
-
-        await loadCustomerProfile(
-            user.uid
-        );
-
-
-        startCustomerListeners(
-            user.uid
-        );
 
     }
 );
 
 
-/* =========================================================
-   CUSTOMER PROFILE
-   ========================================================= */
+// ============================================================
+// LOAD CUSTOMER
+// ============================================================
 
-async function loadCustomerProfile(uid) {
+async function loadCustomer() {
+
+    if (!currentUser) return;
 
     try {
 
-        const profileSnapshot =
-            await getDoc(
-                doc(
-                    db,
-                    "customers",
-                    uid
-                )
+        const customerRef =
+            doc(
+                db,
+                "customers",
+                currentUser.uid
             );
 
-        if (profileSnapshot.exists()) {
+        const snapshot =
+            await getDoc(customerRef);
 
-            customerProfile =
-                profileSnapshot.data();
+        if (snapshot.exists()) {
+
+            currentCustomer =
+                snapshot.data();
 
         } else {
 
-            customerProfile = {
-                uid,
-                role: "customer",
-                name:
-                    currentUser?.displayName || "",
+            currentCustomer = {
+
+                uid:
+                    currentUser.uid,
+
                 email:
-                    currentUser?.email || "",
-                mobile: "",
-                profilePhoto:
-                    currentUser?.photoURL || ""
+                    currentUser.email || "",
+
+                name:
+                    currentUser.displayName || "",
+
+                phone:
+                    "",
+
+                photoURL:
+                    ""
+
             };
 
             await setDoc(
-                doc(
-                    db,
-                    "customers",
-                    uid
-                ),
+                customerRef,
                 {
-                    ...customerProfile,
+                    ...currentCustomer,
                     createdAt:
                         serverTimestamp(),
                     updatedAt:
                         serverTimestamp()
                 },
-                {
-                    merge: true
-                }
+                { merge: true }
             );
-        }
 
-
-        const bookingMobile =
-            $("bookingMobile");
-
-        if (
-            bookingMobile &&
-            customerProfile.mobile
-        ) {
-            bookingMobile.value =
-                customerProfile.mobile;
         }
 
     } catch (error) {
 
         console.error(
-            "Profile loading error:",
+            "Customer loading error:",
             error
         );
 
+        showToast(
+            "Unable to load your account.",
+            "error"
+        );
+
     }
+
 }
 
 
-/* =========================================================
-   SERVICE MODAL
-   ========================================================= */
+// ============================================================
+// LOGGED-IN UI
+// ============================================================
 
-$("requestButton")?.addEventListener(
-    "click",
-    () => {
+function updateLoggedInUI() {
 
-        if (!currentUser) {
+    const button =
+        $("authButton");
 
-            openLogin();
+    if (!button) return;
 
-            showToast(
-                "Please login before booking.",
-                "error"
-            );
+    button.textContent =
+        "My Account";
 
-            return;
-        }
+}
 
-        openServiceModal();
+
+// ============================================================
+// LOGGED-OUT UI
+// ============================================================
+
+function updateLoggedOutUI() {
+
+    const button =
+        $("authButton");
+
+    if (!button) return;
+
+    button.textContent =
+        "Login";
+
+}
+
+
+// ============================================================
+// PROFILE
+// ============================================================
+
+function loadCustomerProfileIntoForm() {
+
+    if (!currentUser) return;
+
+    const customer =
+        currentCustomer || {};
+
+    $("profileName").value =
+        customer.name ||
+        currentUser.displayName ||
+        "";
+
+    $("profilePhone").value =
+        customer.phone || "";
+
+    $("profileEmail").value =
+        currentUser.email || "";
+
+    const image =
+        $("customerProfilePreview");
+
+    const placeholder =
+        $("profilePhotoPlaceholder");
+
+    if (customer.photoURL) {
+
+        image.src =
+            customer.photoURL;
+
+        image.classList.remove("hidden");
+
+        placeholder.classList.add("hidden");
+
+    } else {
+
+        image.classList.add("hidden");
+
+        placeholder.classList.remove("hidden");
+
+    }
+
+}
+
+
+// ============================================================
+// PROFILE PHOTO PREVIEW
+// ============================================================
+
+$("profilePhoto")?.addEventListener(
+    "change",
+    event => {
+
+        const file =
+            event.target.files?.[0];
+
+        if (!file) return;
+
+        const url =
+            URL.createObjectURL(file);
+
+        $("customerProfilePreview").src =
+            url;
+
+        $("customerProfilePreview")
+            .classList.remove("hidden");
+
+        $("profilePhotoPlaceholder")
+            .classList.add("hidden");
 
     }
 );
 
 
-function openServiceModal(service = "") {
+// ============================================================
+// SAVE PROFILE
+// ============================================================
 
-    if (!currentUser) {
-
-        openLogin();
-
-        return;
-    }
-
-    if (serviceSelect) {
-
-        serviceSelect.value =
-            SERVICES.includes(service)
-                ? service
-                : "";
-
-    }
-
-    const mobile =
-        $("bookingMobile");
-
-    if (
-        mobile &&
-        customerProfile?.mobile
-    ) {
-
-        mobile.value =
-            customerProfile.mobile;
-
-    }
-
-    openModal(serviceModal);
-}
-
-
-/* =========================================================
-   SERVICE FORM
-   ========================================================= */
-
-serviceForm?.addEventListener(
+$("profileForm")?.addEventListener(
     "submit",
-    async (event) => {
+    async event => {
 
         event.preventDefault();
 
@@ -1137,43 +722,658 @@ serviceForm?.addEventListener(
             );
 
             return;
+
+        }
+
+        const name =
+            $("profileName")
+                .value
+                .trim();
+
+        const phone =
+            $("profilePhone")
+                .value
+                .trim();
+
+        const photoFile =
+            $("profilePhoto")
+                .files?.[0];
+
+        if (!name || !phone) {
+
+            showToast(
+                "Please complete your profile.",
+                "error"
+            );
+
+            return;
+
+        }
+
+        try {
+
+            let photoURL =
+                currentCustomer?.photoURL || "";
+
+            if (photoFile) {
+
+                validateImage(photoFile);
+
+                const photoRef =
+                    ref(
+                        storage,
+                        `customers/${currentUser.uid}/profile/${Date.now()}_${photoFile.name}`
+                    );
+
+                await uploadBytes(
+                    photoRef,
+                    photoFile
+                );
+
+                photoURL =
+                    await getDownloadURL(photoRef);
+
+            }
+
+
+            await updateProfile(
+                currentUser,
+                {
+                    displayName:
+                        name,
+
+                    photoURL:
+                        photoURL || null
+                }
+            );
+
+
+            await setDoc(
+                doc(
+                    db,
+                    "customers",
+                    currentUser.uid
+                ),
+                {
+
+                    uid:
+                        currentUser.uid,
+
+                    email:
+                        currentUser.email || "",
+
+                    name:
+                        name,
+
+                    phone:
+                        phone,
+
+                    photoURL:
+                        photoURL,
+
+                    updatedAt:
+                        serverTimestamp()
+
+                },
+                { merge: true }
+            );
+
+
+            currentCustomer = {
+
+                ...(currentCustomer || {}),
+
+                name,
+                phone,
+                photoURL
+
+            };
+
+
+            showToast(
+                "Profile updated.",
+                "success"
+            );
+
+            closeModal("profileModal");
+
+        } catch (error) {
+
+            console.error(error);
+
+            showToast(
+                getFirebaseErrorMessage(error),
+                "error"
+            );
+
+        }
+
+    }
+);
+
+
+// ============================================================
+// LOGOUT
+// ============================================================
+
+$("logoutButton")?.addEventListener(
+    "click",
+    async () => {
+
+        try {
+
+            await signOut(auth);
+
+            closeModal("profileModal");
+
+            showToast(
+                "Logged out successfully.",
+                "success"
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            showToast(
+                "Unable to logout.",
+                "error"
+            );
+
+        }
+
+    }
+);
+
+
+// ============================================================
+// SERVICE CARDS
+// ============================================================
+
+$$(".service-card").forEach(card => {
+
+    card.addEventListener(
+        "click",
+        () => {
+
+            const service =
+                card.dataset.service;
+
+            openServiceRequest(service);
+
+        }
+    );
+
+});
+
+
+// ============================================================
+// REQUEST SERVICE BUTTON
+// ============================================================
+
+$("requestServiceButton")?.addEventListener(
+    "click",
+    () => {
+
+        openServiceRequest("");
+
+    }
+);
+
+
+$("emptyRequestButton")?.addEventListener(
+    "click",
+    () => {
+
+        openServiceRequest("");
+
+    }
+);
+
+
+// ============================================================
+// OPEN SERVICE REQUEST
+// ============================================================
+
+function openServiceRequest(service = "") {
+
+    if (!currentUser) {
+
+        authMode = "login";
+
+        updateAuthModal();
+
+        openModal("authModal");
+
+        showToast(
+            "Please login before booking a service.",
+            "info"
+        );
+
+        return;
+
+    }
+
+
+    selectedService =
+        service || "";
+
+    $("serviceSelect").value =
+        service || "";
+
+    $("servicePhone").value =
+        currentCustomer?.phone || "";
+
+
+    if (service) {
+
+        $("selectedServiceText").textContent =
+            `${service} selected. Tell us what needs to be fixed.`;
+
+    } else {
+
+        $("selectedServiceText").textContent =
+            "Select the service you need.";
+
+    }
+
+
+    openModal("serviceModal");
+
+}
+
+
+// ============================================================
+// VIEW ALL SERVICES
+// ============================================================
+
+$("viewAllServices")?.addEventListener(
+    "click",
+    () => {
+
+        document
+            .getElementById("services")
+            ?.scrollIntoView({
+                behavior: "smooth"
+            });
+
+    }
+);
+
+
+// ============================================================
+// SERVICE SELECT
+// ============================================================
+
+$("serviceSelect")?.addEventListener(
+    "change",
+    event => {
+
+        selectedService =
+            event.target.value;
+
+        if (selectedService) {
+
+            $("selectedServiceText")
+                .textContent =
+                `${selectedService} selected.`;
+
+        }
+
+    }
+);
+
+
+// ============================================================
+// LOCATION STATE
+// ============================================================
+
+let customerLocation = {
+
+    latitude: null,
+
+    longitude: null
+
+};
+
+
+// ============================================================
+// GET LOCATION
+// ============================================================
+
+function getCustomerLocation() {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            if (!navigator.geolocation) {
+
+                reject(
+                    new Error(
+                        "Geolocation is not supported."
+                    )
+                );
+
+                return;
+
+            }
+
+            navigator.geolocation.getCurrentPosition(
+
+                position => {
+
+                    customerLocation = {
+
+                        latitude:
+                            position.coords.latitude,
+
+                        longitude:
+                            position.coords.longitude
+
+                    };
+
+                    resolve(
+                        customerLocation
+                    );
+
+                },
+
+                error => {
+
+                    reject(error);
+
+                },
+
+                {
+
+                    enableHighAccuracy:
+                        true,
+
+                    timeout:
+                        15000,
+
+                    maximumAge:
+                        60000
+
+                }
+
+            );
+
+        }
+    );
+
+}
+
+
+// ============================================================
+// LOCATION BUTTONS
+// ============================================================
+
+$("locationButton")?.addEventListener(
+    "click",
+    useCurrentLocation
+);
+
+
+$("useLocationButton")?.addEventListener(
+    "click",
+    useCurrentLocation
+);
+
+
+$("useLocationInRequest")?.addEventListener(
+    "click",
+    async () => {
+
+        try {
+
+            await useCurrentLocation();
+
+        } catch {
+
+            // handled inside function
+
+        }
+
+    }
+);
+
+
+// ============================================================
+// USE CURRENT LOCATION
+// ============================================================
+
+async function useCurrentLocation() {
+
+    try {
+
+        showToast(
+            "Getting your location...",
+            "info"
+        );
+
+        const location =
+            await getCustomerLocation();
+
+
+        $("locationText").textContent =
+            "Location Ready";
+
+        $("mapStatus").textContent =
+            "Your location is ready";
+
+        $("nearbyCount").textContent =
+            "Ready for nearby matching";
+
+
+        if ($("serviceAddress").value.trim() === "") {
+
+            $("serviceAddress").value =
+                `Location coordinates: ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
+
+        }
+
+
+        showToast(
+            "Location detected successfully.",
+            "success"
+        );
+
+
+        return location;
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            "Location permission is required for nearby matching.",
+            "error"
+        );
+
+        throw error;
+
+    }
+
+}
+
+
+// ============================================================
+// SERVICE PHOTO PREVIEW
+// ============================================================
+
+$("servicePhoto")?.addEventListener(
+    "change",
+    event => {
+
+        previewFiles(
+            event.target.files,
+            $("photoPreview")
+        );
+
+    }
+);
+
+
+$("completionPhoto")?.addEventListener(
+    "change",
+    event => {
+
+        previewFiles(
+            event.target.files,
+            $("completionPhotoPreview")
+        );
+
+    }
+);
+
+
+// ============================================================
+// PREVIEW FILES
+// ============================================================
+
+function previewFiles(files, container) {
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    [...files].forEach(file => {
+
+        try {
+
+            validateImage(file);
+
+            const image =
+                document.createElement("img");
+
+            image.src =
+                URL.createObjectURL(file);
+
+            image.alt =
+                "Selected photo";
+
+            container.appendChild(image);
+
+        } catch (error) {
+
+            showToast(
+                error.message,
+                "error"
+            );
+
+        }
+
+    });
+
+}
+
+
+// ============================================================
+// IMAGE VALIDATION
+// ============================================================
+
+function validateImage(file) {
+
+    const allowed =
+        [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
+
+    if (!allowed.includes(file.type)) {
+
+        throw new Error(
+            "Only JPG, PNG or WEBP images are allowed."
+        );
+
+    }
+
+    const maxSize =
+        8 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+
+        throw new Error(
+            "Each image must be smaller than 8 MB."
+        );
+
+    }
+
+}
+
+
+// ============================================================
+// CREATE SERVICE REQUEST
+// ============================================================
+
+$("serviceForm")?.addEventListener(
+    "submit",
+    async event => {
+
+        event.preventDefault();
+
+        if (!currentUser) {
+
+            showToast(
+                "Please login first.",
+                "error"
+            );
+
+            return;
+
         }
 
 
         const service =
-            serviceSelect?.value.trim();
+            $("serviceSelect")
+                .value
+                .trim();
 
-        const mobile =
-            $("bookingMobile")?.value.trim();
+        const phone =
+            $("servicePhone")
+                .value
+                .trim();
 
         const description =
-            $("problemDescription")?.value.trim();
+            $("problemDescription")
+                .value
+                .trim();
 
         const address =
-            $("serviceAddress")?.value.trim();
+            $("serviceAddress")
+                .value
+                .trim();
+
+        const photoFiles =
+            [...(
+                $("servicePhoto")
+                    .files || []
+            )];
 
 
-        if (!SERVICES.includes(service)) {
+        if (!service) {
 
             showToast(
-                "Please select a valid service.",
+                "Please select a service.",
                 "error"
             );
 
             return;
+
         }
 
-
-        if (!validMobile(mobile)) {
+        if (!phone) {
 
             showToast(
-                "Enter a valid 10 digit mobile number.",
+                "Please enter your mobile number.",
                 "error"
             );
 
             return;
-        }
 
+        }
 
         if (!description) {
 
@@ -1183,63 +1383,93 @@ serviceForm?.addEventListener(
             );
 
             return;
-        }
 
+        }
 
         if (!address) {
 
             showToast(
-                "Please enter the service address.",
+                "Please enter the service location.",
                 "error"
             );
 
             return;
+
         }
 
 
-        const submit =
-            serviceForm.querySelector(
-                'button[type="submit"]'
-            );
+        if (
+            !customerLocation.latitude ||
+            !customerLocation.longitude
+        ) {
+
+            try {
+
+                await getCustomerLocation();
+
+            } catch {
+
+                showToast(
+                    "Please enable location so we can find nearby professionals.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+        }
 
 
         try {
 
-            if (submit) {
+            const submitButton =
+                $("submitServiceButton");
 
-                submit.disabled = true;
+            submitButton.disabled =
+                true;
 
-                submit.textContent =
-                    "Creating Request...";
-            }
-
-
-            const files =
-                $("servicePhotos")?.files || [];
+            submitButton.textContent =
+                "Creating Request...";
 
 
-            let photos = [];
+            // =================================================
+            // UPLOAD CUSTOMER REQUEST PHOTOS
+            // =================================================
 
+            const photoURLs = [];
 
-            if (files.length) {
+            for (
+                const file
+                of photoFiles
+            ) {
 
-                if (submit) {
-                    submit.textContent =
-                        "Uploading Photos...";
-                }
+                validateImage(file);
 
-                photos =
-                    await uploadServicePhotos(
-                        files
+                const photoRef =
+                    ref(
+                        storage,
+                        `serviceRequests/${currentUser.uid}/${Date.now()}_${file.name}`
                     );
+
+                await uploadBytes(
+                    photoRef,
+                    file
+                );
+
+                const url =
+                    await getDownloadURL(
+                        photoRef
+                    );
+
+                photoURLs.push(url);
+
             }
 
 
-            if (submit) {
-                submit.textContent =
-                    "Sending Request...";
-            }
-
+            // =================================================
+            // REQUEST DATA
+            // =================================================
 
             const requestData = {
 
@@ -1247,64 +1477,86 @@ serviceForm?.addEventListener(
                     currentUser.uid,
 
                 customerName:
-                    customerProfile?.name ||
+                    currentCustomer?.name ||
                     currentUser.displayName ||
                     "",
 
                 customerEmail:
-                    currentUser.email || "",
-
-                customerMobile:
-                    mobile,
-
-                customerPhoto:
-                    customerProfile?.profilePhoto ||
-                    currentUser.photoURL ||
+                    currentUser.email ||
                     "",
 
-                service,
+                customerPhone:
+                    phone,
 
-                description,
+                customerPhotoURL:
+                    currentCustomer?.photoURL ||
+                    "",
 
-                address,
 
-                latitude:
-                    currentLocation.latitude,
+                service:
+                    service,
 
-                longitude:
-                    currentLocation.longitude,
+                description:
+                    description,
 
-                photos,
+                address:
+                    address,
 
-                status: "searching",
 
-                assignedWorkerId: null,
+                location: {
 
-                assignedAt: null,
+                    latitude:
+                        customerLocation.latitude,
 
-                workerName: null,
+                    longitude:
+                        customerLocation.longitude
 
-                workerPhone: null,
+                },
 
-                workerPhoto: null,
 
-                workerRating: null,
+                photos:
+                    photoURLs,
 
-                workerServices: [],
 
-                completionPhotos: [],
+                status:
+                    "searching",
 
-                customerRating: null,
 
-                customerFeedback: null,
+                acceptedWorkerId:
+                    null,
+
+                acceptedWorkerName:
+                    null,
+
+                acceptedWorkerPhone:
+                    null,
+
+                acceptedWorkerPhotoURL:
+                    null,
+
+                acceptedAt:
+                    null,
+
+
+                cancelledBy:
+                    null,
+
+                cancellationReason:
+                    null,
+
 
                 createdAt:
                     serverTimestamp(),
 
                 updatedAt:
                     serverTimestamp()
+
             };
 
+
+            // =================================================
+            // CREATE REQUEST
+            // =================================================
 
             const requestRef =
                 await addDoc(
@@ -1316,75 +1568,41 @@ serviceForm?.addEventListener(
                 );
 
 
-            await setDoc(
-                doc(
-                    db,
-                    "customers",
-                    currentUser.uid
-                ),
-                {
-                    uid:
-                        currentUser.uid,
-
-                    role: "customer",
-
-                    name:
-                        customerProfile?.name ||
-                        currentUser.displayName ||
-                        "",
-
-                    email:
-                        currentUser.email || "",
-
-                    mobile,
-
-                    profilePhoto:
-                        customerProfile?.profilePhoto ||
-                        currentUser.photoURL ||
-                        "",
-
-                    updatedAt:
-                        serverTimestamp()
-                },
-                {
-                    merge: true
-                }
-            );
-
-
             currentRequestId =
                 requestRef.id;
 
 
-            closeModal(serviceModal);
+            $("serviceForm").reset();
 
-            serviceForm.reset();
+            $("photoPreview").innerHTML =
+                "";
 
-            currentLocation.address = "";
-
-            currentLocation.latitude = null;
-
-            currentLocation.longitude = null;
+            closeModal("serviceModal");
 
 
-            showToast(
-                "Request booked. Searching for a professional...",
-                "success"
+            // =================================================
+            // SHOW SEARCHING
+            // =================================================
+
+            showSearchingScreen(
+                requestRef.id,
+                service
             );
 
+
+            // =================================================
+            // WATCH REQUEST
+            // =================================================
 
             listenToCurrentRequest(
                 requestRef.id
             );
 
 
-            document
-                .getElementById(
-                    "activeRequestSection"
-                )
-                ?.scrollIntoView({
-                    behavior: "smooth"
-                });
+            showToast(
+                "Service request created.",
+                "success"
+            );
 
 
         } catch (error) {
@@ -1395,18 +1613,22 @@ serviceForm?.addEventListener(
             );
 
             showToast(
-                "Could not create the request. Please try again.",
+                "Unable to create the service request.",
                 "error"
             );
 
         } finally {
 
-            if (submit) {
+            const submitButton =
+                $("submitServiceButton");
 
-                submit.disabled = false;
+            if (submitButton) {
 
-                submit.textContent =
-                    "Book Service";
+                submitButton.disabled =
+                    false;
+
+                submitButton.textContent =
+                    "Find a Professional";
 
             }
 
@@ -1416,175 +1638,47 @@ serviceForm?.addEventListener(
 );
 
 
-/* =========================================================
-   CLOUDINARY
-   ========================================================= */
+// ============================================================
+// SHOW SEARCHING SCREEN
+// ============================================================
 
-async function uploadImageToCloudinary(file) {
-
-    const url =
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
-
-
-    const formData =
-        new FormData();
-
-
-    formData.append(
-        "file",
-        file
-    );
-
-
-    formData.append(
-        "upload_preset",
-        CLOUDINARY_UPLOAD_PRESET
-    );
-
-
-    const response =
-        await fetch(
-            url,
-            {
-                method: "POST",
-                body: formData
-            }
-        );
-
-
-    if (!response.ok) {
-
-        throw new Error(
-            "Image upload failed."
-        );
-
-    }
-
-
-    const result =
-        await response.json();
-
-
-    return {
-
-        url:
-            result.secure_url,
-
-        publicId:
-            result.public_id
-
-    };
-}
-
-
-async function uploadServicePhotos(files) {
-
-    const validFiles =
-        Array.from(files)
-            .filter(
-                (file) =>
-                    file.type.startsWith("image/")
-            )
-            .slice(0, 6);
-
-
-    const results = [];
-
-
-    for (
-        const file of validFiles
-    ) {
-
-        const uploaded =
-            await uploadImageToCloudinary(
-                file
-            );
-
-        results.push(uploaded);
-
-    }
-
-
-    return results;
-}
-
-
-/* =========================================================
-   PHOTO PREVIEW
-   ========================================================= */
-
-$("servicePhotos")?.addEventListener(
-    "change",
-    () => {
-
-        const preview =
-            $("photoPreview");
-
-        if (!preview) {
-            return;
-        }
-
-        preview.innerHTML = "";
-
-        Array
-            .from(
-                $("servicePhotos").files || []
-            )
-            .slice(0, 6)
-            .forEach((file) => {
-
-                if (
-                    !file.type.startsWith("image/")
-                ) {
-                    return;
-                }
-
-                const image =
-                    document.createElement("img");
-
-                const reader =
-                    new FileReader();
-
-                reader.onload = () => {
-
-                    image.src =
-                        reader.result;
-
-                    preview.appendChild(
-                        image
-                    );
-
-                };
-
-                reader.readAsDataURL(file);
-
-            });
-
-    }
-);
-
-
-/* =========================================================
-   CURRENT REQUEST LISTENER
-   ========================================================= */
-
-function listenToCurrentRequest(requestId) {
-
-    if (currentRequestUnsubscribe) {
-
-        currentRequestUnsubscribe();
-
-        currentRequestUnsubscribe = null;
-    }
-
+function showSearchingScreen(
+    requestId,
+    service
+) {
 
     currentRequestId =
         requestId;
 
+    $("searchingService")
+        .textContent =
+        service;
 
-    activeRequestSection
-        ?.classList
-        .remove("hidden");
+    $("searchingStatus")
+        .textContent =
+        "Searching for available professionals...";
+
+    openModal(
+        "searchingModal"
+    );
+
+}
+
+
+// ============================================================
+// LISTEN TO CURRENT REQUEST
+// ============================================================
+
+let unsubscribeCurrentRequest = null;
+
+
+function listenToCurrentRequest(requestId) {
+
+    if (unsubscribeCurrentRequest) {
+
+        unsubscribeCurrentRequest();
+
+    }
 
 
     const requestRef =
@@ -1595,641 +1689,421 @@ function listenToCurrentRequest(requestId) {
         );
 
 
-    currentRequestUnsubscribe =
+    unsubscribeCurrentRequest =
         onSnapshot(
             requestRef,
-            (snapshot) => {
+            snapshot => {
 
                 if (!snapshot.exists()) {
 
-                    activeRequestContainer.innerHTML = `
-                        <div class="empty-card">
-                            <h3>Request no longer available</h3>
-                        </div>
-                    `;
-
                     return;
+
                 }
 
 
-                const request = {
-                    id:
-                        snapshot.id,
-
-                    ...snapshot.data()
-                };
+                const request =
+                    snapshot.data();
 
 
-                renderActiveRequest(
+                handleRequestStatus(
+                    requestId,
                     request
                 );
 
             },
-            (error) => {
+
+            error => {
 
                 console.error(
                     "Request listener error:",
                     error
                 );
 
-                showToast(
-                    "Unable to update your request status.",
-                    "error"
-                );
-
             }
         );
+
 }
 
 
-/* =========================================================
-   ACTIVE REQUEST RENDER
-   ========================================================= */
+// ============================================================
+// HANDLE REQUEST STATUS
+// ============================================================
 
-function renderActiveRequest(request) {
+function handleRequestStatus(
+    requestId,
+    request
+) {
 
-    if (!activeRequestContainer) {
+    currentRequestId =
+        requestId;
+
+
+    if (request.status === "searching") {
+
+        $("searchingStatus")
+            .textContent =
+            "Searching for available professionals...";
+
         return;
+
     }
 
 
-    const status =
-        request.status || "searching";
+    if (request.status === "accepted") {
 
+        closeModal(
+            "searchingModal"
+        );
 
-    if (
-        status === "completed" ||
-        status === "customer_cancelled"
-    ) {
-
-        activeRequestSection
-            ?.classList
-            .add("hidden");
+        showWorkerDetails(
+            request
+        );
 
         return;
+
     }
 
 
     if (
-        status === "searching" ||
-        status === "pending" ||
-        status === "worker_cancelled"
+        request.status === "cancelled"
     ) {
 
-        activeRequestContainer.innerHTML = `
+        closeModal(
+            "searchingModal"
+        );
 
-            <div class="request-card searching">
+        showToast(
+            "This service request was cancelled.",
+            "info"
+        );
 
-                <span class="request-status">
-                    🔎 Searching for a Professional
-                </span>
+        return;
 
-                <div class="search-animation"></div>
+    }
 
-                <h3>
-                    We're finding an available professional.
-                </h3>
 
-                <p>
-                    Your ${escapeHTML(
-                        request.service || "service"
-                    )}
-                    request is being offered to eligible
-                    professionals.
-                </p>
+    if (
+        request.status === "completed"
+    ) {
 
-                <p class="work-meta">
-                    Request ID:
-                    <strong>
-                        ${escapeHTML(request.id)}
-                    </strong>
-                </p>
+        closeModal(
+            "searchingModal"
+        );
 
-                ${
-                    status === "worker_cancelled"
-                        ? `
-                            <p>
-                                The previous professional was unavailable.
-                                Searching for another professional...
-                            </p>
-                        `
-                        : ""
+        showFeedbackModal(
+            requestId
+        );
+
+        return;
+
+    }
+
+}
+
+
+// ============================================================
+// CANCEL SEARCHING
+// ============================================================
+
+$("cancelSearchingButton")?.addEventListener(
+    "click",
+    async () => {
+
+        if (!currentRequestId) {
+
+            closeModal(
+                "searchingModal"
+            );
+
+            return;
+
+        }
+
+
+        const confirmed =
+            confirm(
+                "Cancel this service request?"
+            );
+
+        if (!confirmed) return;
+
+
+        try {
+
+            await updateDoc(
+                doc(
+                    db,
+                    "serviceRequests",
+                    currentRequestId
+                ),
+                {
+
+                    status:
+                        "cancelled",
+
+                    cancelledBy:
+                        "customer",
+
+                    cancellationReason:
+                        "Customer cancelled while searching.",
+
+                    updatedAt:
+                        serverTimestamp()
+
                 }
-
-                <button
-                    id="cancelCurrentRequest"
-                    class="secondary-button"
-                    type="button"
-                >
-                    Cancel Request
-                </button>
-
-            </div>
-        `;
-
-
-        $("cancelCurrentRequest")
-            ?.addEventListener(
-                "click",
-                () => cancelCustomerRequest(
-                    request.id
-                )
             );
 
 
-        return;
-    }
+            closeModal(
+                "searchingModal"
+            );
 
 
-    if (
-        status === "assigned" ||
-        status === "accepted" ||
-        status === "confirmed" ||
-        status === "on_the_way" ||
-        status === "in_progress"
-    ) {
+            showToast(
+                "Service request cancelled.",
+                "success"
+            );
 
-        const workerPhoto =
-            request.workerPhoto ||
-            "https://res.cloudinary.com/lqfozcs3/image/upload/v1/fixmywork/default-worker.png";
 
+        } catch (error) {
 
-        activeRequestContainer.innerHTML = `
+            console.error(error);
 
-            <div class="request-card">
+            showToast(
+                "Unable to cancel request.",
+                "error"
+            );
 
-                <span class="request-status">
-                    ✓ Professional Found
-                </span>
-
-                <h3>
-                    Your request has been accepted
-                </h3>
-
-                <div class="worker-card">
-
-                    <img
-                        class="worker-photo"
-                        src="${escapeHTML(workerPhoto)}"
-                        alt="Professional profile photo"
-                    >
-
-                    <div class="worker-info">
-
-                        <h3>
-                            ${escapeHTML(
-                                request.workerName ||
-                                "Professional"
-                            )}
-                        </h3>
-
-                        <p>
-                            🛠️
-                            ${escapeHTML(
-                                request.service
-                            )}
-                        </p>
-
-                        ${
-                            request.workerRating
-                                ? `
-                                    <p>
-                                        ⭐
-                                        ${escapeHTML(
-                                            String(
-                                                request.workerRating
-                                            )
-                                        )}
-                                    </p>
-                                `
-                                : ""
-                        }
-
-                        ${
-                            request.workerPhone
-                                ? `
-                                    <p>
-                                        📞
-                                        ${escapeHTML(
-                                            request.workerPhone
-                                        )}
-                                    </p>
-                                `
-                                : ""
-                        }
-
-                    </div>
-
-                    ${
-                        request.workerPhone
-                            ? `
-                                <a
-                                    class="call-button"
-                                    href="tel:${escapeHTML(
-                                        request.workerPhone
-                                    )}"
-                                >
-                                    📞 Call Worker
-                                </a>
-                            `
-                            : ""
-                    }
-
-                </div>
-
-
-                <div class="work-meta">
-
-                    <strong>
-                        Service:
-                    </strong>
-
-                    ${escapeHTML(
-                        request.service
-                    )}
-
-                </div>
-
-
-                <div class="work-meta">
-
-                    <strong>
-                        Problem:
-                    </strong>
-
-                    ${escapeHTML(
-                        request.description
-                    )}
-
-                </div>
-
-
-                <div class="work-meta">
-
-                    <strong>
-                        Address:
-                    </strong>
-
-                    ${escapeHTML(
-                        request.address
-                    )}
-
-                </div>
-
-
-                ${
-                    request.photos?.length
-                        ? `
-                            <div class="request-photos">
-                                ${request.photos
-                                    .map(
-                                        (photo) => `
-                                            <img
-                                                src="${escapeHTML(
-                                                    photo.url
-                                                )}"
-                                                alt="Request photo"
-                                            >
-                                        `
-                                    )
-                                    .join("")}
-                            </div>
-                        `
-                        : ""
-                }
-
-
-                ${
-                    status === "on_the_way"
-                        ? `
-                            <p>
-                                🚗 Professional is on the way.
-                            </p>
-                        `
-                        : ""
-                }
-
-
-                ${
-                    status === "in_progress"
-                        ? `
-                            <p>
-                                🔧 Work is in progress.
-                            </p>
-                        `
-                        : ""
-                }
-
-            </div>
-        `;
-
-        return;
-    }
-
-
-    activeRequestContainer.innerHTML = `
-
-        <div class="request-card">
-
-            <span class="request-status">
-                ${escapeHTML(
-                    getStatusLabel(status)
-                )}
-            </span>
-
-            <h3>
-                Your request is being processed.
-            </h3>
-
-        </div>
-
-    `;
-}
-
-
-/* =========================================================
-   CANCEL CUSTOMER REQUEST
-   ========================================================= */
-
-async function cancelCustomerRequest(
-    requestId
-) {
-
-    const confirmed =
-        window.confirm(
-            "Are you sure you want to cancel this request?"
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    try {
-
-        await updateDoc(
-            doc(
-                db,
-                "serviceRequests",
-                requestId
-            ),
-            {
-
-                status:
-                    "customer_cancelled",
-
-                cancelledBy:
-                    "customer",
-
-                cancelledAt:
-                    serverTimestamp(),
-
-                updatedAt:
-                    serverTimestamp()
-
-            }
-        );
-
-
-        showToast(
-            "Request cancelled.",
-            "success"
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Cancel error:",
-            error
-        );
-
-        showToast(
-            "Could not cancel the request.",
-            "error"
-        );
+        }
 
     }
-}
+);
 
 
-/* =========================================================
-   STATUS LABEL
-   ========================================================= */
+// ============================================================
+// SHOW WORKER DETAILS
+// ============================================================
 
-function getStatusLabel(status) {
+function showWorkerDetails(request) {
 
-    const labels = {
+    currentWorker = {
 
-        searching:
-            "Searching for a Professional",
+        id:
+            request.acceptedWorkerId,
 
-        pending:
-            "Request Received",
+        name:
+            request.acceptedWorkerName,
 
-        assigned:
-            "Professional Assigned",
+        phone:
+            request.acceptedWorkerPhone,
 
-        accepted:
-            "Accepted",
+        photoURL:
+            request.acceptedWorkerPhotoURL,
 
-        confirmed:
-            "Confirmed",
+        service:
+            request.service,
 
-        on_the_way:
-            "Professional On The Way",
+        rating:
+            request.acceptedWorkerRating,
 
-        in_progress:
-            "Work In Progress",
-
-        completed:
-            "Completed",
-
-        worker_cancelled:
-            "Professional Cancelled — Searching Again",
-
-        customer_cancelled:
-            "Cancelled"
+        experience:
+            request.acceptedWorkerExperience
 
     };
 
-    return labels[status] ||
-        "Request Processing";
-}
+
+    $("workerName")
+        .textContent =
+        currentWorker.name ||
+        "Professional";
 
 
-/* =========================================================
-   CUSTOMER LISTENERS
-   ========================================================= */
-
-function startCustomerListeners(uid) {
-
-    listenForActiveRequests(uid);
-
-    listenForCompletedWorks(uid);
-}
+    $("workerService")
+        .textContent =
+        currentWorker.service ||
+        request.service ||
+        "Service";
 
 
-function stopCustomerListeners() {
-
-    if (currentRequestUnsubscribe) {
-
-        currentRequestUnsubscribe();
-
-        currentRequestUnsubscribe = null;
-    }
+    $("workerPhone")
+        .textContent =
+        currentWorker.phone
+            ? `📞 ${currentWorker.phone}`
+            : "Mobile number available";
 
 
-    if (worksUnsubscribe) {
-
-        worksUnsubscribe();
-
-        worksUnsubscribe = null;
-    }
-
-
-    activeRequestSection
-        ?.classList
-        .add("hidden");
-}
+    $("workerRating")
+        .textContent =
+        currentWorker.rating
+            ? `⭐ ${currentWorker.rating}`
+            : "⭐ Rating available";
 
 
-/* =========================================================
-   ACTIVE REQUESTS
-   ========================================================= */
+    $("workerExperience")
+        .textContent =
+        currentWorker.experience
+            ? `Experience: ${currentWorker.experience}`
+            : "Verified professional";
 
-function listenForActiveRequests(uid) {
 
-    const q =
-        query(
-            collection(
-                db,
-                "serviceRequests"
-            ),
-            where(
-                "customerId",
-                "==",
-                uid
-            )
+    $("workerStatus")
+        .textContent =
+        "✓ Professional accepted your request.";
+
+
+    const photo =
+        $("workerProfilePhoto");
+
+    const placeholder =
+        $("workerPhotoPlaceholder");
+
+
+    if (currentWorker.photoURL) {
+
+        photo.src =
+            currentWorker.photoURL;
+
+        photo.classList.remove(
+            "hidden"
         );
 
+        placeholder.classList.add(
+            "hidden"
+        );
 
-    const unsubscribe =
-        onSnapshot(
-            q,
-            (snapshot) => {
+    } else {
 
-                let activeRequest = null;
+        photo.classList.add(
+            "hidden"
+        );
 
+        placeholder.classList.remove(
+            "hidden"
+        );
 
-                snapshot.forEach(
-                    (document) => {
-
-                        const data =
-                            document.data();
-
-                        const activeStatuses = [
-                            "searching",
-                            "pending",
-                            "assigned",
-                            "accepted",
-                            "confirmed",
-                            "on_the_way",
-                            "in_progress",
-                            "worker_cancelled"
-                        ];
+    }
 
 
-                        if (
-                            activeStatuses.includes(
-                                data.status
-                            )
-                        ) {
-
-                            const candidate = {
-
-                                id:
-                                    document.id,
-
-                                ...data
-                            };
+    const callButton =
+        $("callWorkerButton");
 
 
-                            if (
-                                !activeRequest ||
-                                getMillis(
-                                    candidate.createdAt
-                                ) >
-                                getMillis(
-                                    activeRequest.createdAt
-                                )
-                            ) {
+    if (currentWorker.phone) {
 
-                                activeRequest =
-                                    candidate;
+        callButton.href =
+            `tel:${currentWorker.phone}`;
 
-                            }
+        callButton.classList.remove(
+            "disabled"
+        );
 
-                        }
+    } else {
 
-                    }
-                );
+        callButton.href =
+            "#";
+
+        callButton.classList.add(
+            "disabled"
+        );
+
+    }
 
 
-                if (activeRequest) {
+    openModal(
+        "workerDetailsModal"
+    );
 
-                    currentRequestId =
-                        activeRequest.id;
+}
 
-                    listenToCurrentRequest(
-                        activeRequest.id
-                    );
 
-                } else {
+// ============================================================
+// CUSTOMER CANCEL AFTER ACCEPT
+// ============================================================
 
-                    activeRequestSection
-                        ?.classList
-                        .add("hidden");
+$("workerCancelButton")?.addEventListener(
+    "click",
+    async () => {
+
+        if (!currentRequestId) return;
+
+
+        const confirmed =
+            confirm(
+                "Do you want to cancel this accepted work?"
+            );
+
+        if (!confirmed) return;
+
+
+        try {
+
+            await updateDoc(
+                doc(
+                    db,
+                    "serviceRequests",
+                    currentRequestId
+                ),
+                {
+
+                    status:
+                        "cancelled",
+
+                    cancelledBy:
+                        "customer",
+
+                    cancellationReason:
+                        "Customer cancelled after acceptance.",
+
+                    updatedAt:
+                        serverTimestamp()
 
                 }
-
-            },
-            (error) => {
-
-                console.error(
-                    "Active request query error:",
-                    error
-                );
-
-            }
-        );
+            );
 
 
-    if (currentRequestUnsubscribe) {
-        currentRequestUnsubscribe();
+            closeModal(
+                "workerDetailsModal"
+            );
+
+
+            showToast(
+                "Work cancelled.",
+                "success"
+            );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            showToast(
+                "Unable to cancel the work.",
+                "error"
+            );
+
+        }
+
+    }
+);
+
+
+// ============================================================
+// CUSTOMER REQUEST HISTORY
+// ============================================================
+
+function subscribeToCustomerRequests() {
+
+    if (!currentUser) return;
+
+
+    if (unsubscribeCustomerRequests) {
+
+        unsubscribeCustomerRequests();
+
     }
 
-    currentRequestUnsubscribe =
-        unsubscribe;
-}
 
-
-/* =========================================================
-   COMPLETED WORKS
-   ========================================================= */
-
-function listenForCompletedWorks(uid) {
-
-    if (worksUnsubscribe) {
-
-        worksUnsubscribe();
-
-        worksUnsubscribe = null;
-    }
-
-
-    const q =
+    const requestsQuery =
         query(
             collection(
                 db,
@@ -2238,85 +2112,78 @@ function listenForCompletedWorks(uid) {
             where(
                 "customerId",
                 "==",
-                uid
+                currentUser.uid
             ),
-            where(
-                "status",
-                "==",
-                "completed"
+            orderBy(
+                "createdAt",
+                "desc"
             )
         );
 
 
-    worksUnsubscribe =
+    unsubscribeCustomerRequests =
         onSnapshot(
-            q,
-            (snapshot) => {
+            requestsQuery,
+            snapshot => {
 
-                const works = [];
-
-
-                snapshot.forEach(
-                    (document) => {
-
-                        works.push({
+                const requests =
+                    snapshot.docs.map(
+                        document => ({
 
                             id:
                                 document.id,
 
                             ...document.data()
 
-                        });
-
-                    }
-                );
+                        })
+                    );
 
 
-                works.sort(
-                    (a, b) =>
-                        getMillis(b.createdAt) -
-                        getMillis(a.createdAt)
-                );
-
-
-                renderCompletedWorks(
-                    works
+                renderCustomerWorks(
+                    requests
                 );
 
             },
-            (error) => {
+
+            error => {
 
                 console.error(
-                    "Completed works error:",
+                    "History error:",
                     error
-                );
-
-                showToast(
-                    "Unable to load completed works.",
-                    "error"
                 );
 
             }
         );
+
 }
 
 
-/* =========================================================
-   COMPLETED WORKS RENDER
-   ========================================================= */
+// ============================================================
+// RENDER CUSTOMER WORKS
+// ============================================================
 
-function renderCompletedWorks(works) {
+function renderCustomerWorks(
+    requests
+) {
 
-    if (!worksContainer) {
-        return;
-    }
+    const container =
+        $("worksContainer");
+
+    if (!container) return;
 
 
-    if (!works.length) {
+    const completed =
+        requests.filter(
+            request =>
+                request.status === "completed"
+        );
 
-        worksContainer.innerHTML = `
 
-            <div class="empty-card">
+    if (completed.length === 0) {
+
+        container.innerHTML = `
+
+            <div class="empty-state">
 
                 <div class="empty-icon">
                     📋
@@ -2330,293 +2197,212 @@ function renderCompletedWorks(works) {
                     Your completed service works will appear here.
                 </p>
 
+                <button
+                    class="primary-button"
+                    id="historyRequestButton"
+                    type="button"
+                >
+                    Request a Service
+                </button>
+
             </div>
+
         `;
 
+
+        $("historyRequestButton")
+            ?.addEventListener(
+                "click",
+                () => openServiceRequest("")
+            );
+
+
         return;
+
     }
 
 
-    worksContainer.innerHTML =
-        works
-            .map(
-                (work) => {
-
-                    const hasRating =
-                        Number(
-                            work.customerRating || 0
-                        ) > 0;
+    container.innerHTML = "";
 
 
-                    return `
+    completed.forEach(
+        request => {
 
-                        <article
-                            class="work-card"
-                            data-work-id="${escapeHTML(
-                                work.id
-                            )}"
-                        >
+            const card =
+                document.createElement(
+                    "article"
+                );
 
-                            <div class="work-top">
-
-                                <div>
-
-                                    <h3>
-                                        ${escapeHTML(
-                                            work.service
-                                        )}
-                                    </h3>
-
-                                    <div class="work-meta">
-                                        Completed:
-                                        ${formatDate(
-                                            work.completedAt ||
-                                            work.updatedAt
-                                        )}
-                                    </div>
-
-                                </div>
-
-                                <span class="status-completed">
-                                    ✓ Completed
-                                </span>
-
-                            </div>
+            card.className =
+                "work-card";
 
 
-                            <p>
-                                ${escapeHTML(
-                                    work.description
-                                )}
-                            </p>
+            const date =
+                formatTimestamp(
+                    request.completedAt ||
+                    request.updatedAt ||
+                    request.createdAt
+                );
 
 
-                            <div class="work-meta">
+            card.innerHTML = `
 
-                                📍
-                                ${escapeHTML(
-                                    work.address
-                                )}
+                <div class="work-card-top">
 
-                            </div>
+                    <div>
 
+                        <span class="work-service">
+                            ${escapeHTML(
+                                request.service || "Service"
+                            )}
+                        </span>
 
-                            ${
-                                work.workerName
-                                    ? `
-                                        <div class="worker-card">
+                        <small>
+                            ${escapeHTML(date)}
+                        </small>
 
-                                            <img
-                                                class="worker-photo"
-                                                src="${escapeHTML(
-                                                    work.workerPhoto ||
-                                                    ""
-                                                )}"
-                                                alt="Worker"
-                                            >
+                    </div>
 
-                                            <div class="worker-info">
+                    <span class="status-badge completed">
+                        Completed
+                    </span>
 
-                                                <h3>
-                                                    ${escapeHTML(
-                                                        work.workerName
-                                                    )}
-                                                </h3>
-
-                                                ${
-                                                    work.workerRating
-                                                        ? `
-                                                            <p>
-                                                                ⭐
-                                                                ${escapeHTML(
-                                                                    String(
-                                                                        work.workerRating
-                                                                    )
-                                                                )}
-                                                            </p>
-                                                        `
-                                                        : ""
-                                                }
-
-                                            </div>
-
-                                        </div>
-                                    `
-                                    : ""
-                            }
+                </div>
 
 
-                            ${
-                                Array.isArray(
-                                    work.completionPhotos
-                                ) &&
-                                work.completionPhotos.length
-                                    ? `
-                                        <div>
-
-                                            <strong>
-                                                Work Completion Photos
-                                            </strong>
-
-                                            <div class="completion-photos">
-
-                                                ${work.completionPhotos
-                                                    .map(
-                                                        (photo) => `
-                                                            <img
-                                                                src="${escapeHTML(
-                                                                    photo.url
-                                                                )}"
-                                                                alt="Completed work"
-                                                                loading="lazy"
-                                                            >
-                                                        `
-                                                    )
-                                                    .join("")}
-
-                                            </div>
-
-                                        </div>
-                                    `
-                                    : ""
-                            }
+                <p>
+                    ${escapeHTML(
+                        request.description || ""
+                    )}
+                </p>
 
 
-                            ${
-                                hasRating
-                                    ? `
-                                        <div class="rating-box">
+                <div class="work-worker">
 
-                                            ⭐ You rated this work
-                                            ${escapeHTML(
-                                                String(
-                                                    work.customerRating
-                                                )
-                                            )}/5
+                    <strong>
+                        Professional
+                    </strong>
 
-                                            ${
-                                                work.customerFeedback
-                                                    ? `
-                                                        <p>
-                                                            ${escapeHTML(
-                                                                work.customerFeedback
-                                                            )}
-                                                        </p>
-                                                    `
-                                                    : ""
-                                            }
+                    <span>
+                        ${escapeHTML(
+                            request.acceptedWorkerName ||
+                            "Professional"
+                        )}
+                    </span>
 
-                                        </div>
-                                    `
-                                    : `
-                                        <div class="rating-box">
+                </div>
 
-                                            <strong>
-                                                Rate your experience
-                                            </strong>
 
-                                            <div
-                                                class="rating-buttons"
-                                                data-rating-work="${escapeHTML(
-                                                    work.id
-                                                )}"
-                                            >
+                <button
+                    class="secondary-button review-button"
+                    data-work-id="${request.id}"
+                    type="button"
+                >
+                    ⭐ Rate & Review
+                </button>
 
-                                                ${[1,2,3,4,5]
-                                                    .map(
-                                                        (number) => `
-                                                            <button
-                                                                type="button"
-                                                                class="rating-button"
-                                                                data-rating="${number}"
-                                                            >
-                                                                ${number}★
-                                                            </button>
-                                                        `
-                                                    )
-                                                    .join("")}
+            `;
 
-                                            </div>
 
-                                            <textarea
-                                                class="feedback-input"
-                                                data-feedback-work="${escapeHTML(
-                                                    work.id
-                                                )}"
-                                                maxlength="1000"
-                                                placeholder="Write your feedback..."
-                                            ></textarea>
+            container.appendChild(
+                card
+            );
 
-                                            <button
-                                                type="button"
-                                                class="primary-button save-rating-button"
-                                                data-save-rating="${escapeHTML(
-                                                    work.id
-                                                )}"
-                                            >
-                                                Submit Feedback
-                                            </button>
+        }
+    );
 
-                                        </div>
-                                    `
-                            }
 
-                        </article>
-                    `;
+    $$(".review-button").forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    showFeedbackModal(
+                        button.dataset.workId
+                    );
+
                 }
-            )
-            .join("");
+            );
 
+        }
+    );
 
-    bindRatingButtons();
 }
 
 
-/* =========================================================
-   RATING
-   ========================================================= */
+// ============================================================
+// FEEDBACK MODAL
+// ============================================================
 
-function bindRatingButtons() {
+function showFeedbackModal(
+    workId
+) {
 
-    document
-        .querySelectorAll(
-            ".rating-buttons"
-        )
-        .forEach(
-            (container) => {
+    $("feedbackWorkId")
+        .value =
+        workId;
 
-                container
-                    .querySelectorAll(
-                        ".rating-button"
-                    )
+    $("selectedRating")
+        .value =
+        "";
+
+    $("feedbackText")
+        .value =
+        "";
+
+    selectedRating =
+        0;
+
+
+    $$("#ratingButtons button")
+        .forEach(button => {
+
+            button.classList.remove(
+                "selected"
+            );
+
+        });
+
+
+    openModal(
+        "feedbackModal"
+    );
+
+}
+
+
+// ============================================================
+// RATING
+// ============================================================
+
+$$("#ratingButtons button")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                selectedRating =
+                    Number(
+                        button.dataset.rating
+                    );
+
+                $("selectedRating")
+                    .value =
+                    selectedRating;
+
+
+                $$("#ratingButtons button")
                     .forEach(
-                        (button) => {
+                        ratingButton => {
 
-                            button.addEventListener(
-                                "click",
-                                () => {
-
-                                    container
-                                        .querySelectorAll(
-                                            ".rating-button"
-                                        )
-                                        .forEach(
-                                            (item) =>
-                                                item
-                                                    .classList
-                                                    .remove(
-                                                        "selected"
-                                                    )
-                                        );
-
-                                    button.classList.add(
-                                        "selected"
-                                    );
-
-                                    container.dataset.selectedRating =
-                                        button.dataset.rating;
-
-                                }
+                            ratingButton.classList.toggle(
+                                "selected",
+                                Number(
+                                    ratingButton.dataset.rating
+                                ) <= selectedRating
                             );
 
                         }
@@ -2625,754 +2411,533 @@ function bindRatingButtons() {
             }
         );
 
+    });
 
-    document
-        .querySelectorAll(
-            ".save-rating-button"
-        )
-        .forEach(
-            (button) => {
 
-                button.addEventListener(
-                    "click",
-                    () =>
-                        saveCustomerFeedback(
-                            button.dataset.saveRating
-                        )
+// ============================================================
+// FEEDBACK FORM
+// ============================================================
+
+$("feedbackForm")?.addEventListener(
+    "submit",
+    async event => {
+
+        event.preventDefault();
+
+
+        if (!currentUser) {
+
+            showToast(
+                "Please login first.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        const workId =
+            $("feedbackWorkId")
+                .value;
+
+        const rating =
+            Number(
+                $("selectedRating")
+                    .value
+            );
+
+        const feedback =
+            $("feedbackText")
+                .value
+                .trim();
+
+        const files =
+            [...(
+                $("completionPhoto")
+                    .files || []
+            )];
+
+
+        if (!rating) {
+
+            showToast(
+                "Please select a rating.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        if (!feedback) {
+
+            showToast(
+                "Please enter your feedback.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        try {
+
+            const photoURLs = [];
+
+
+            for (
+                const file
+                of files
+            ) {
+
+                validateImage(file);
+
+                const photoRef =
+                    ref(
+                        storage,
+                        `feedback/${currentUser.uid}/${workId}/${Date.now()}_${file.name}`
+                    );
+
+
+                await uploadBytes(
+                    photoRef,
+                    file
                 );
 
+
+                const url =
+                    await getDownloadURL(
+                        photoRef
+                    );
+
+
+                photoURLs.push(url);
+
             }
-        );
-}
 
 
-/* =========================================================
-   SAVE FEEDBACK
-   ========================================================= */
+            const reviewData = {
 
-async function saveCustomerFeedback(
-    workId
-) {
+                customerId:
+                    currentUser.uid,
 
-    if (!currentUser) {
-        return;
-    }
+                workId:
+                    workId,
 
-
-    const card =
-        document.querySelector(
-            `[data-work-id="${CSS.escape(workId)}"]`
-        );
-
-
-    if (!card) {
-        return;
-    }
-
-
-    const ratingContainer =
-        card.querySelector(
-            ".rating-buttons"
-        );
-
-
-    const rating =
-        Number(
-            ratingContainer?.dataset.selectedRating
-        );
-
-
-    const feedback =
-        card
-            .querySelector(
-                `[data-feedback-work="${CSS.escape(
-                    workId
-                )}"]`
-            )
-            ?.value
-            .trim() || "";
-
-
-    if (
-        !Number.isInteger(rating) ||
-        rating < 1 ||
-        rating > 5
-    ) {
-
-        showToast(
-            "Please select a rating from 1 to 5.",
-            "error"
-        );
-
-        return;
-    }
-
-
-    try {
-
-        await updateDoc(
-            doc(
-                db,
-                "serviceRequests",
-                workId
-            ),
-            {
-
-                customerRating:
+                rating:
                     rating,
 
-                customerFeedback:
+                feedback:
                     feedback,
 
-                customerRatedAt:
-                    serverTimestamp(),
+                photos:
+                    photoURLs,
 
-                updatedAt:
+                createdAt:
                     serverTimestamp()
 
-            }
-        );
+            };
 
 
-        showToast(
-            "Thank you for your feedback.",
-            "success"
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Feedback error:",
-            error
-        );
-
-        showToast(
-            "Could not save feedback.",
-            "error"
-        );
-
-    }
-}
-
-
-/* =========================================================
-   LOCATION
-   ========================================================= */
-
-$("locationButton")?.addEventListener(
-    "click",
-    requestLocation
-);
-
-
-$("useLocationButton")?.addEventListener(
-    "click",
-    requestLocation
-);
-
-
-$("bookingLocationButton")?.addEventListener(
-    "click",
-    requestLocation
-);
-
-
-function requestLocation() {
-
-    if (!navigator.geolocation) {
-
-        showToast(
-            "Location is not supported on this device.",
-            "error"
-        );
-
-        return;
-    }
-
-
-    $("mapStatus").textContent =
-        "Getting your location...";
-
-
-    navigator.geolocation.getCurrentPosition(
-
-        async (position) => {
-
-            currentLocation.latitude =
-                position.coords.latitude;
-
-            currentLocation.longitude =
-                position.coords.longitude;
-
-
-            await reverseGeocode(
-                currentLocation.latitude,
-                currentLocation.longitude
+            await addDoc(
+                collection(
+                    db,
+                    "reviews"
+                ),
+                reviewData
             );
 
 
-            $("mapStatus").textContent =
-                "Location detected";
+            await updateDoc(
+                doc(
+                    db,
+                    "serviceRequests",
+                    workId
+                ),
+                {
+
+                    customerReviewed:
+                        true,
+
+                    customerRating:
+                        rating,
+
+                    customerFeedback:
+                        feedback,
+
+                    reviewPhotos:
+                        photoURLs,
+
+                    updatedAt:
+                        serverTimestamp()
+
+                }
+            );
 
 
-            const bookingStatus =
-                $("bookingLocationStatus");
-
-            if (bookingStatus) {
-
-                bookingStatus.textContent =
-                    "✓ Current location selected";
-
-            }
+            closeModal(
+                "feedbackModal"
+            );
 
 
-            const address =
-                $("serviceAddress");
+            $("feedbackForm")
+                .reset();
 
-            if (
-                address &&
-                currentLocation.address
-            ) {
 
-                address.value =
-                    currentLocation.address;
-
-            }
+            $("completionPhotoPreview")
+                .innerHTML =
+                "";
 
 
             showToast(
-                "Location detected successfully.",
+                "Thank you for your review.",
                 "success"
             );
 
 
-            updateMapMarker();
+        } catch (error) {
 
-        },
-
-        (error) => {
-
-            console.error(
-                "Location error:",
-                error
-            );
-
-            $("mapStatus").textContent =
-                "Location permission required";
-
+            console.error(error);
 
             showToast(
-                "Please allow location permission.",
+                "Unable to submit your review.",
                 "error"
             );
 
-        },
-
-        {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 60000
         }
-
-    );
-}
-
-
-/* =========================================================
-   REVERSE GEOCODING
-   ========================================================= */
-
-async function reverseGeocode(
-    latitude,
-    longitude
-) {
-
-    try {
-
-        const response =
-            await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(
-                    latitude
-                )}&lon=${encodeURIComponent(
-                    longitude
-                )}`,
-                {
-                    headers: {
-                        Accept:
-                            "application/json"
-                    }
-                }
-            );
-
-
-        if (!response.ok) {
-            return;
-        }
-
-
-        const result =
-            await response.json();
-
-
-        currentLocation.address =
-            result.display_name || "";
-
-
-    } catch (error) {
-
-        console.error(
-            "Reverse geocoding error:",
-            error
-        );
-
-    }
-}
-
-
-/* =========================================================
-   MAP
-   ========================================================= */
-
-let map = null;
-
-let customerMarker = null;
-
-
-async function initializeMap() {
-
-    const mapElement =
-        $("map");
-
-
-    if (!mapElement) {
-        return;
-    }
-
-
-    try {
-
-        await loadLeaflet();
-
-
-        map =
-            window.L
-                .map(
-                    mapElement
-                )
-                .setView(
-                    [16.3067, 80.4365],
-                    13
-                );
-
-
-        window.L
-            .tileLayer(
-                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                {
-                    maxZoom: 19,
-                    attribution:
-                        "&copy; OpenStreetMap contributors"
-                }
-            )
-            .addTo(map);
-
-
-    } catch (error) {
-
-        console.error(
-            "Map error:",
-            error
-        );
-
-    }
-}
-
-
-function loadLeaflet() {
-
-    return new Promise(
-        (resolve, reject) => {
-
-            if (window.L) {
-
-                resolve();
-
-                return;
-            }
-
-
-            const existing =
-                document.querySelector(
-                    'script[data-leaflet="true"]'
-                );
-
-
-            if (existing) {
-
-                existing.addEventListener(
-                    "load",
-                    () => resolve()
-                );
-
-                existing.addEventListener(
-                    "error",
-                    reject
-                );
-
-                return;
-            }
-
-
-            const css =
-                document.createElement(
-                    "link"
-                );
-
-            css.rel =
-                "stylesheet";
-
-            css.href =
-                "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-
-            document.head.appendChild(
-                css
-            );
-
-
-            const script =
-                document.createElement(
-                    "script"
-                );
-
-            script.src =
-                "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-
-            script.dataset.leaflet =
-                "true";
-
-            script.onload =
-                () => resolve();
-
-            script.onerror =
-                reject;
-
-            document.head.appendChild(
-                script
-            );
-
-        }
-    );
-}
-
-
-function updateMapMarker() {
-
-    if (
-        !map ||
-        !window.L ||
-        currentLocation.latitude === null
-    ) {
-        return;
-    }
-
-
-    if (customerMarker) {
-        customerMarker.remove();
-    }
-
-
-    customerMarker =
-        window.L
-            .marker(
-                [
-                    currentLocation.latitude,
-                    currentLocation.longitude
-                ]
-            )
-            .addTo(map)
-            .bindPopup(
-                "Your service location"
-            );
-
-
-    map.setView(
-        [
-            currentLocation.latitude,
-            currentLocation.longitude
-        ],
-        15
-    );
-
-}
-
-
-/* =========================================================
-   POLICY
-   ========================================================= */
-
-const POLICIES = {
-
-    terms: {
-
-        title:
-            "Terms & Conditions",
-
-        content: `
-            <p>
-                FIX MY WORK is a service discovery and coordination
-                platform connecting customers with independent service
-                professionals.
-            </p>
-
-            <p>
-                Customers must provide accurate contact, service and
-                location information when creating a request.
-            </p>
-
-            <p>
-                Professionals are responsible for accepting only jobs
-                they are willing and able to perform.
-            </p>
-
-            <p>
-                Service pricing, completion and payment arrangements
-                must be clearly communicated between the customer and
-                professional.
-            </p>
-
-            <p>
-                FIX MY WORK may suspend accounts involved in misuse,
-                fraud, harassment or unsafe activity.
-            </p>
-        `
-    },
-
-
-    privacy: {
-
-        title:
-            "Privacy Policy",
-
-        content: `
-            <p>
-                FIX MY WORK may collect account information, mobile
-                number, service request details, location information,
-                profile photos and service-related photos necessary
-                to operate the platform.
-            </p>
-
-            <p>
-                Customer information is used to provide requested
-                services, connect customers with eligible professionals,
-                maintain service history and provide support.
-            </p>
-
-            <p>
-                We do not ask customers to share passwords, OTPs or
-                banking credentials with professionals.
-            </p>
-
-            <p>
-                Users may contact FIX MY WORK for account or privacy
-                related questions at fixmywork6734@gmail.com.
-            </p>
-        `
-    },
-
-
-    safety: {
-
-        title:
-            "Safety",
-
-        content: `
-            <h3>Stay Safe</h3>
-
-            <p>
-                Never share your OTP, password, card PIN, UPI PIN or
-                banking credentials with a service professional.
-            </p>
-
-            <p>
-                Confirm the service details and expected work before
-                allowing work to begin.
-            </p>
-
-            <p>
-                If you feel unsafe, stop the interaction and contact
-                FIX MY WORK support.
-            </p>
-
-            <p>
-                Support:
-                <strong>
-                    fixmywork6734@gmail.com
-                </strong>
-            </p>
-        `
-    }
-
-};
-
-
-document
-    .querySelectorAll(
-        "[data-policy]"
-    )
-    .forEach(
-        (button) => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const policy =
-                        POLICIES[
-                            button.dataset.policy
-                        ];
-
-
-                    if (!policy) {
-                        return;
-                    }
-
-
-                    $("policyTitle").textContent =
-                        policy.title;
-
-
-                    $("policyContent").innerHTML =
-                        policy.content;
-
-
-                    openModal(
-                        policyModal
-                    );
-
-                }
-            );
-
-        }
-    );
-
-
-/* =========================================================
-   SAFETY CLOSE
-   ========================================================= */
-
-$("closeSafety")?.addEventListener(
-    "click",
-    () => {
-
-        $("safetyBanner")
-            ?.remove();
 
     }
 );
 
 
-/* =========================================================
-   MOBILE MENU
-   ========================================================= */
+// ============================================================
+// SUPPORT
+// ============================================================
+
+$("supportButton")?.addEventListener(
+    "click",
+    () => {
+
+        window.location.href =
+            "mailto:fixmywork6734@gmail.com?subject=FIX MY WORK Support";
+
+    }
+);
+
+
+// ============================================================
+// TERMS
+// ============================================================
+
+$("termsButton")?.addEventListener(
+    "click",
+    () => {
+
+        openModal(
+            "termsModal"
+        );
+
+    }
+);
+
+
+// ============================================================
+// PRIVACY
+// ============================================================
+
+$("privacyButton")?.addEventListener(
+    "click",
+    () => {
+
+        openModal(
+            "privacyModal"
+        );
+
+    }
+);
+
+
+// ============================================================
+// SAFETY
+// ============================================================
+
+$("safetyButton")?.addEventListener(
+    "click",
+    () => {
+
+        openModal(
+            "safetyModal"
+        );
+
+    }
+);
+
+
+// ============================================================
+// MENU
+// ============================================================
 
 $("menuButton")?.addEventListener(
     "click",
     () => {
 
-        const nav =
-            $("desktopNav");
+        const navigation =
+            $("mainNavigation");
+
+        if (!navigation) return;
 
 
-        if (!nav) {
-            return;
-        }
+        const isOpen =
+            navigation.classList.toggle(
+                "mobile-open"
+            );
 
 
-        if (
-            nav.style.display === "flex"
-        ) {
-
-            nav.style.display =
-                "";
-
-        } else {
-
-            nav.style.display =
-                "flex";
-
-            nav.style.position =
-                "absolute";
-
-            nav.style.top =
-                "78px";
-
-            nav.style.left =
-                "0";
-
-            nav.style.right =
-                "0";
-
-            nav.style.padding =
-                "20px";
-
-            nav.style.background =
-                "white";
-
-            nav.style.flexDirection =
-                "column";
-
-        }
+        $("menuButton")
+            .setAttribute(
+                "aria-expanded",
+                String(isOpen)
+            );
 
     }
 );
 
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
+// ============================================================
+// CLOSE MENU AFTER LINK
+// ============================================================
 
-function getMillis(timestamp) {
+$$(".desktop-nav a").forEach(
+    link => {
+
+        link.addEventListener(
+            "click",
+            () => {
+
+                $("mainNavigation")
+                    ?.classList.remove(
+                        "mobile-open"
+                    );
+
+                $("menuButton")
+                    ?.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+
+            }
+        );
+
+    }
+);
+
+
+// ============================================================
+// INSTALL APP
+// ============================================================
+
+window.addEventListener(
+    "beforeinstallprompt",
+    event => {
+
+        event.preventDefault();
+
+        deferredInstallPrompt =
+            event;
+
+        $("installButton")
+            ?.classList.remove(
+                "hidden"
+            );
+
+    }
+);
+
+
+$("installButton")?.addEventListener(
+    "click",
+    async () => {
+
+        if (!deferredInstallPrompt) {
+
+            showToast(
+                "Use your browser menu and choose Install App.",
+                "info"
+            );
+
+            return;
+
+        }
+
+
+        deferredInstallPrompt.prompt();
+
+        await deferredInstallPrompt.userChoice;
+
+        deferredInstallPrompt =
+            null;
+
+        $("installButton")
+            ?.classList.add(
+                "hidden"
+            );
+
+    }
+);
+
+
+// ============================================================
+// INSTALLED EVENT
+// ============================================================
+
+window.addEventListener(
+    "appinstalled",
+    () => {
+
+        $("installButton")
+            ?.classList.add(
+                "hidden"
+            );
+
+        showToast(
+            "FIX MY WORK installed successfully.",
+            "success"
+        );
+
+    }
+);
+
+
+// ============================================================
+// FORMAT TIMESTAMP
+// ============================================================
+
+function formatTimestamp(
+    timestamp
+) {
 
     if (!timestamp) {
-        return 0;
+
+        return "Recently";
+
     }
+
 
     try {
 
-        return timestamp.toMillis
-            ? timestamp.toMillis()
-            : new Date(timestamp).getTime();
+        const date =
+            timestamp.toDate
+                ? timestamp.toDate()
+                : new Date(timestamp);
+
+
+        return date.toLocaleString(
+            "en-IN",
+            {
+
+                day:
+                    "2-digit",
+
+                month:
+                    "short",
+
+                year:
+                    "numeric",
+
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit"
+
+            }
+        );
 
     } catch {
 
-        return 0;
+        return "Recently";
+
     }
-}
-
-
-/* =========================================================
-   YEAR
-   ========================================================= */
-
-if ($("year")) {
-
-    $("year").textContent =
-        new Date().getFullYear();
 
 }
 
 
-/* =========================================================
-   INITIALIZE
-   ========================================================= */
+// ============================================================
+// ESCAPE HTML
+// ============================================================
 
-buildServices();
+function escapeHTML(value) {
 
-initializeMap();
+    return String(value ?? "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 
-updateAuthUI();
+}
 
-console.log(
-    "FIX MY WORK Customer App initialized."
+
+// ============================================================
+// KEYBOARD ESCAPE
+// ============================================================
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key !== "Escape") return;
+
+
+        document
+            .querySelectorAll(
+                ".modal:not(.hidden)"
+            )
+            .forEach(
+                modal => {
+
+                    closeModal(
+                        modal.id
+                    );
+
+                }
+            );
+
+    }
+);
+
+
+// ============================================================
+// INITIAL PAGE SETUP
+// ============================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        updateAuthModal();
+
+        console.log(
+            "FIX MY WORK Customer App loaded."
+        );
+
+    }
 );
